@@ -2113,7 +2113,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 362.75, 250.5, 50.0, 22.0 ],
 									"style" : "",
-									"text" : "0."
+									"text" : "170."
 								}
 
 							}
@@ -2127,7 +2127,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 479.0, 154.0, 50.0, 62.0 ],
 									"style" : "",
-									"text" : "boidCount 0. 0. 0. 0. 0. 0."
+									"text" : "boidCount 30. 50. 90. 0. 0. 0."
 								}
 
 							}
@@ -2140,7 +2140,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 24.0, 519.5, 149.25, 22.0 ],
 									"style" : "",
-									"text" : "maxspeed 16. 5."
+									"text" : "accel 5. 5."
 								}
 
 							}
@@ -2167,7 +2167,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 325.0, 487.0, 53.0, 62.0 ],
 									"style" : "",
-									"text" : "number 0. 0. 0. 0. 0. 0. 0."
+									"text" : "number 0. 0. 0. 0. 0. 0. 170."
 								}
 
 							}
@@ -3552,7 +3552,7 @@
 ,
 					"style" : "",
 					"text" : "autopattr",
-					"varname" : "u221001214"
+					"varname" : "u867000818"
 				}
 
 			}
@@ -9107,9 +9107,9 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "jit_matrix", "" ],
-					"patching_rect" : [ 457.5, 492.166687, 91.0, 22.0 ],
+					"patching_rect" : [ 457.5, 492.166687, 65.0, 22.0 ],
 					"style" : "",
-					"text" : "jit.boids0717_3",
+					"text" : "jit.boids3d",
 					"varname" : "jitboids0710_1"
 				}
 
@@ -11094,7 +11094,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 325.0, 291.0, 50.0, 62.0 ],
 									"style" : "",
-									"text" : "jit_matrix u808000476"
+									"text" : "jit_matrix u569001084"
 								}
 
 							}
@@ -11121,7 +11121,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 189.0, 291.0, 50.0, 62.0 ],
 									"style" : "",
-									"text" : "jit_matrix u808000476"
+									"text" : "jit_matrix u569001084"
 								}
 
 							}
@@ -11148,7 +11148,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 66.75, 291.0, 50.0, 62.0 ],
 									"style" : "",
-									"text" : "jit_matrix u808000476"
+									"text" : "jit_matrix u569001084"
 								}
 
 							}
@@ -13489,7 +13489,7 @@
 				"implicit" : 1
 			}
 , 			{
-				"name" : "jit.boids0717_3.mxo",
+				"name" : "jit.boids3d.mxo",
 				"type" : "iLaX"
 			}
  ],
