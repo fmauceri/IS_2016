@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 353.0, 148.0, 1826.0, 1238.0 ],
+		"rect" : [ 39.0, 96.0, 1448.0, 887.0 ],
 		"bgcolor" : [ 0.847059, 0.854902, 0.870588, 1.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
@@ -2140,7 +2140,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 24.0, 519.5, 149.25, 22.0 ],
 									"style" : "",
-									"text" : "inertia 0. 0."
+									"text" : "maxspeed 16. 5."
 								}
 
 							}
@@ -3552,7 +3552,7 @@
 ,
 					"style" : "",
 					"text" : "autopattr",
-					"varname" : "u720000816"
+					"varname" : "u221001214"
 				}
 
 			}
@@ -9451,7 +9451,7 @@
 					"id" : "obj-15",
 					"lockeddragscroll" : 0,
 					"maxclass" : "bpatcher",
-					"name" : "FlockParamUI_0709.maxpat",
+					"name" : "FlockParamUI_02-04.maxpat",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
@@ -9475,7 +9475,7 @@
 					"id" : "obj-12",
 					"lockeddragscroll" : 0,
 					"maxclass" : "bpatcher",
-					"name" : "FlockParamUI_0709.maxpat",
+					"name" : "FlockParamUI_02-04.maxpat",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
@@ -9499,7 +9499,7 @@
 					"id" : "obj-11",
 					"lockeddragscroll" : 0,
 					"maxclass" : "bpatcher",
-					"name" : "FlockParamUI_0709.maxpat",
+					"name" : "FlockParamUI_02-04.maxpat",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
@@ -9523,7 +9523,7 @@
 					"id" : "obj-3",
 					"lockeddragscroll" : 0,
 					"maxclass" : "bpatcher",
-					"name" : "FlockParamUI_0709.maxpat",
+					"name" : "FlockParamUI_02-04.maxpat",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
@@ -9547,7 +9547,7 @@
 					"id" : "obj-2",
 					"lockeddragscroll" : 0,
 					"maxclass" : "bpatcher",
-					"name" : "FlockParamUI_0709.maxpat",
+					"name" : "FlockParamUI_02-04.maxpat",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
@@ -9571,7 +9571,7 @@
 					"id" : "obj-192",
 					"lockeddragscroll" : 0,
 					"maxclass" : "bpatcher",
-					"name" : "FlockParamUI_0709.maxpat",
+					"name" : "FlockParamUI_02-04.maxpat",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
@@ -13475,15 +13475,15 @@
 		}
 ,
 		"dependency_cache" : [ 			{
-				"name" : "FlockParamUI_0709.maxpat",
-				"bootpath" : "/Volumes/swarmpi/jit.boids0717_2",
+				"name" : "FlockParamUI_02-04.maxpat",
+				"bootpath" : "~/Desktop/IS_2016",
 				"patcherrelativepath" : ".",
 				"type" : "JSON",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "paramPreset.json",
-				"bootpath" : "/Volumes/swarmpi/jit.boids0717_2",
+				"bootpath" : "~/Desktop/IS_2016",
 				"patcherrelativepath" : ".",
 				"type" : "JSON",
 				"implicit" : 1

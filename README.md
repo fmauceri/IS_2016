@@ -1,6 +1,10 @@
 # IS_2016
 ###### Grace Handler, Stephen Majercik, Frank Mauceri, Jack Truskowski
 
+
+![Boids](https://github.com/JackTruskowski/IS_2016/tree/master/misc/goboidsgo.png)
+
+
 Instructions for running the simulation can be found in the `ControlPanel...maxpat` file
 
 ####Future Work:
