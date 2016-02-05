@@ -24,6 +24,7 @@
 #define         MAX_FLOCKS      6
 
 // initial flight parameters
+const int           kBoidMaxAge     = 100;
 const long			kNumBoids		= 0;	// number of boids
 const long			kNumNeighbors	= 2;	// must be <= kMaxNeighbors
 const double 		kMinSpeed		= 0.15;	// boids' minimum speed
@@ -65,6 +66,7 @@ const double        kFlyRectScalingFactor = 10;
 typedef struct Boid {
     
     int         flockID;
+    int         age;
     
 	double		oldPos[3];
 	double		newPos[3];
@@ -407,15 +409,16 @@ t_jit_err jit_boids3d_accel(t_jit_boids3d *flockPtr, void *attr, long argc, t_at
 //GRACE AND JACK CHANGED THIS HEAVILY
 t_jit_err jit_boids3d_number(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
-    int boidChanges[6];
-    int newNumBoids;
+    int boidChanges[6]; //number of boids being deleted from each flock
     
+    int newNumBoids; //new total number of boids across all flocks
     newNumBoids = jit_atom_getlong(argv+6);
     
     for (int i=0; i<6; i++){
-        boidChanges[i] = (int)jit_atom_getlong(argv+i);
+        boidChanges[i] = (int)jit_atom_getlong(argv+i); //new total boids for the ith flock
     }
     
+    //make sure the number of boids in at least one flock is being changed
     int changed = 0;
     for(int i=0; i<6; i++){
         if (boidChanges[i] != 0){
@@ -427,24 +430,28 @@ t_jit_err jit_boids3d_number(t_jit_boids3d *flockPtr, void *attr, long argc, t_a
         return;
     }
     
+    //create new array for all boids in all flocks
     Boid *boidArray = (Boid *) jit_getbytes(sizeof(Boid)*newNumBoids);
     
     int index = 0;
     
+    //for every boid, check if it needs to be deleted
     for (int i=0; i<flockPtr->number; i++){
-        if (boidChanges[flockPtr->boid[i].flockID] < 0){
+        if (boidChanges[flockPtr->boid[i].flockID] < 0){ //not adding this boid, increment boidChanges by 1
             //we're deleting this boid
             boidChanges[flockPtr->boid[i].flockID]++;
         }
         else{
             //add this boid to the new array
-            boidArray[index] = flockPtr->boid[i];
+            boidArray[index] = flockPtr->boid[i]; //add this boid to the new total boids array
             index++;
         }
     }
     
+    //index of the last boid in boidArray
     int indexOfNewBoids = index;
     
+    //assigns flock IDs to new boids
     for (int i=0; i<6; i++){
         while (boidChanges[i] > 0){
             //add a new boid
@@ -1234,9 +1241,10 @@ void InitFlock(t_jit_boids3d *flockPtr)
     
     Flock_donumBoids(flockPtr, flockPtr->number);
     
-    //Set every boids flockID to 0 for initialization
+    //Set every boids flockID and age to 0 for initialization
     for (int i = 0; i <  flockPtr->number; i++){
         flockPtr->boid[i].flockID = 0;
+        flockPtr->boid[i].age = 0;
     }
 
     

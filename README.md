@@ -18,3 +18,4 @@ Instructions for running the simulation can be found in the `ControlPanel...maxp
 
 ####Questions:
 - Is naive wall deflection okay, or should the velocity change as boids approach walls?
+- Make a maximum number of boids? This way we don't have to dynamically make a new array everytime we want to change the number of boids
