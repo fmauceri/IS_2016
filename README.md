@@ -14,4 +14,7 @@ Instructions for running the simulation can be found in the `ControlPanel...maxp
 - Movable / Multiple Attractors  
 - Implement the deletion of boids (age?)  
 - Revisit the statistics used to characterize flock behavior  
-- Stipulate where boids are born in space when they are added  
+- Stipulate where boids are born in space when they are added
+
+####Questions:
+- Is naive wall deflection okay, or should the velocity change as boids approach walls?
