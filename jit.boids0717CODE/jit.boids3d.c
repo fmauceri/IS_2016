@@ -44,6 +44,7 @@ const double		kFlyRectBottom	= -1.0;
 const double		kFlyRectRight	= 1.0;
 const double		kFlyRectFront	= 1.0;
 const double		kFlyRectBack	= -1.0;
+const double        kFlyRectScalingFactor = 10;
 
 //use defines instead of structs in jitter object
 //because of the way attribute data types work
@@ -669,7 +670,7 @@ void FlightStep(t_jit_boids3d *flockPtr)
 	double			goCenterVel[3];
 	double			goAttractVel[3];
 	double			matchNeighborVel[3];
-	double			avoidWallsVel[3];
+    double			avoidWallsVel[3];
 	double			avoidNeighborVel[3];
 	double			avoidNeighborSpeed;
 	const double	zeroVel[3]	= {0.0, 0.0, 0.0};
@@ -711,7 +712,7 @@ void FlightStep(t_jit_boids3d *flockPtr)
         
 		SeekPoint(flockPtr, i, flockPtr->tempCenterPt, goCenterVel);
 		SeekPoint(flockPtr, i, flockPtr->attractpt, goAttractVel);
-		AvoidWalls(flockPtr, i, avoidWallsVel);
+		//AvoidWalls(flockPtr, i, avoidWallsVel);
         
         
 		// compute resultant velocity using weights and inertia
@@ -719,20 +720,17 @@ void FlightStep(t_jit_boids3d *flockPtr)
         (flockPtr->center[flockID] * goCenterVel[x] +
          flockPtr->attract[flockID] * goAttractVel[x] +
          flockPtr->match[flockID] * matchNeighborVel[x] +
-         flockPtr->avoid[flockID] * avoidNeighborVel[x] +
-         flockPtr->repel[flockID] * avoidWallsVel[x]) / flockPtr->inertia[flockID];
+         flockPtr->avoid[flockID] * avoidNeighborVel[x]) / flockPtr->inertia[flockID];
 		flockPtr->boid[i].newDir[y] = flockPtr->inertia[flockID] * (flockPtr->boid[i].oldDir[y]) +
         (flockPtr->center[flockID] * goCenterVel[y] +
          flockPtr->attract[flockID] * goAttractVel[y] +
          flockPtr->match[flockID] * matchNeighborVel[y] +
-         flockPtr->avoid[flockID] * avoidNeighborVel[y] +
-         flockPtr->repel[flockID] * avoidWallsVel[y]) / flockPtr->inertia[flockID];
+         flockPtr->avoid[flockID] * avoidNeighborVel[y]) / flockPtr->inertia[flockID];
 		flockPtr->boid[i].newDir[z] = flockPtr->inertia[flockID] * (flockPtr->boid[i].oldDir[z]) +
         (flockPtr->center[flockID] * goCenterVel[z] +
          flockPtr->attract[flockID] * goAttractVel[z] +
          flockPtr->match[flockID] * matchNeighborVel[z] +
-         flockPtr->avoid[flockID] * avoidNeighborVel[z] +
-         flockPtr->repel[flockID] * avoidWallsVel[z]) / flockPtr->inertia[flockID];
+         flockPtr->avoid[flockID] * avoidNeighborVel[z]) / flockPtr->inertia[flockID];
 		NormalizeVelocity(flockPtr->boid[i].newDir);	// normalize velocity so its length is unity
         
 		// set to avoidNeighborSpeed bounded by minspeed and maxspeed
@@ -743,6 +741,9 @@ void FlightStep(t_jit_boids3d *flockPtr)
 			flockPtr->boid[i].speed = flockPtr->maxspeed[flockID];
 		else
 			flockPtr->boid[i].speed = flockPtr->minspeed[flockID];
+        
+        //bouce back from walls
+        AvoidWalls(flockPtr, i, flockPtr->boid[i].newDir);
         
 		// calculate new position, applying speed
 		flockPtr->boid[i].newPos[x] += flockPtr->boid[i].newDir[x] * flockPtr->boid[i].speed * (flockPtr->speed[flockID] / 100.0);
@@ -955,34 +956,35 @@ void AvoidWalls(t_jit_boids3d *flockPtr, long theBoid, double *wallVel)
 {
 	double		testPoint[3];
     
-	wallVel[x] = 0.0;
-	wallVel[y] = 0.0;
-	wallVel[z] = 0.0;
+//	wallVel[x] = 0.0;
+//	wallVel[y] = 0.0;
+//	wallVel[z] = 0.0;
     
 	/* calculate test point in front of the nose of the boid */
 	/* distance depends on the boid's speed and the avoid edge constant */
-	testPoint[x] = flockPtr->boid[theBoid].oldPos[x] + flockPtr->boid[theBoid].oldDir[x] * flockPtr->boid[theBoid].speed * flockPtr->edgedist[flockPtr->boid[theBoid].flockID];
-	testPoint[y] = flockPtr->boid[theBoid].oldPos[y] + flockPtr->boid[theBoid].oldDir[y] * flockPtr->boid[theBoid].speed * flockPtr->edgedist[flockPtr->boid[theBoid].flockID];
-	testPoint[z] = flockPtr->boid[theBoid].oldPos[z] + flockPtr->boid[theBoid].oldDir[z] * flockPtr->boid[theBoid].speed * flockPtr->edgedist[flockPtr->boid[theBoid].flockID];
+	testPoint[x] = flockPtr->boid[theBoid].oldPos[x] + flockPtr->boid[theBoid].newDir[x] * (flockPtr->boid[theBoid].speed * (flockPtr->speed[flockPtr->boid[theBoid].flockID] / 100.0));// * flockPtr->edgedist[flockPtr->boid[theBoid].flockID];
+    testPoint[y] = flockPtr->boid[theBoid].oldPos[y] + flockPtr->boid[theBoid].newDir[y] * (flockPtr->boid[theBoid].speed * (flockPtr->speed[flockPtr->boid[theBoid].flockID] / 100.0));// * flockPtr->edgedist[flockPtr->boid[theBoid].flockID];fl
+    testPoint[z] = flockPtr->boid[theBoid].oldPos[z] + flockPtr->boid[theBoid].newDir[z] * (flockPtr->boid[theBoid].speed * (flockPtr->speed[flockPtr->boid[theBoid].flockID] / 100.0));// * flockPtr->edgedist[flockPtr->boid[theBoid].flockID];
+
     
 	/* if test point is out of the left (right) side of flockPtr->flyrect, */
 	/* return a positive (negative) horizontal velocity component */
-	if (testPoint[x] < flockPtr->flyrect[left])
-		wallVel[x] = ABS(flockPtr->boid[theBoid].oldDir[x]);
-	else if (testPoint[x] > flockPtr->flyrect[right])
-		wallVel[x] = - ABS(flockPtr->boid[theBoid].oldDir[x]);
+	if (testPoint[x] < flockPtr->flyrect[left]*kFlyRectScalingFactor)
+		wallVel[x] = ABS(wallVel[x]);
+	else if (testPoint[x] > flockPtr->flyrect[right]*kFlyRectScalingFactor)
+		wallVel[x] = - ABS(wallVel[x]);
     
 	/* same with top and bottom */
-	if (testPoint[y] < flockPtr->flyrect[top])
-		wallVel[y] = ABS(flockPtr->boid[theBoid].oldDir[y]);
-	else if (testPoint[y] > flockPtr->flyrect[bottom])
-		wallVel[y] = - ABS(flockPtr->boid[theBoid].oldDir[y]);
+	if (testPoint[y] > flockPtr->flyrect[top]*kFlyRectScalingFactor)
+		wallVel[y] = - ABS(wallVel[y]);
+	else if (testPoint[y] < flockPtr->flyrect[bottom]*kFlyRectScalingFactor)
+		wallVel[y] = ABS(wallVel[y]);
     
 	/* same with front and back*/
-	if (testPoint[z] < flockPtr->flyrect[front])
-		wallVel[z] = ABS(flockPtr->boid[theBoid].oldDir[z]);
-	else if (testPoint[z] > flockPtr->flyrect[back])
-		wallVel[z] = - ABS(flockPtr->boid[theBoid].oldDir[z]);
+	if (testPoint[z] > flockPtr->flyrect[front]*kFlyRectScalingFactor)
+		wallVel[z] = - ABS(wallVel[z]);
+	else if (testPoint[z] < flockPtr->flyrect[back]*kFlyRectScalingFactor)
+		wallVel[z] = ABS(wallVel[z]);
 }
 
 char InFront(BoidPtr theBoid, BoidPtr neighbor)
