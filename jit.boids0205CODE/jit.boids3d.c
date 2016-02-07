@@ -83,7 +83,6 @@ typedef struct _jit_boids3d
 	t_object		ob;
 	char			mode;
 	long			number;
-    //long            oldNumber;
 	long			neighbors;
 	
 	double			flyrect[6];
@@ -406,7 +405,9 @@ t_jit_err jit_boids3d_accel(t_jit_boids3d *flockPtr, void *attr, long argc, t_at
 	flockPtr->accel[flockID] = (double)MAX(jit_atom_getfloat(argv), 0.000001);
 }
 
-//GRACE AND JACK CHANGED THIS HEAVILY
+/*
+    This function is called when the number of boids in the maxpatch is changed. Creates and initializes a new array containing all boids
+ */
 t_jit_err jit_boids3d_number(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
     int boidChanges[6]; //number of boids being deleted from each flock
@@ -427,7 +428,7 @@ t_jit_err jit_boids3d_number(t_jit_boids3d *flockPtr, void *attr, long argc, t_a
         }
     }
     if(changed == 0){
-        return;
+        return NULL;
     }
     
     //create new array for all boids in all flocks
@@ -481,15 +482,21 @@ t_jit_err jit_boids3d_set(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom
 }
 
 
+/*
+    Changes the current XYZ position of a boid
+ */
 t_jit_err jit_boids3d_set_pos(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
 	double pos[3];
+    
+    //get the correct boid
 	int id = flockPtr->set;
 	
 	pos[0] = jit_atom_getfloat(argv+0);
 	pos[1] = jit_atom_getfloat(argv+1);
 	pos[2] = jit_atom_getfloat(argv+2);
 	
+    //update the position
 	flockPtr->boid[id].newPos[x] = pos[0];
 	flockPtr->boid[id].newPos[y] = pos[1];
     flockPtr->boid[id].newPos[z] = pos[2];
@@ -498,7 +505,9 @@ t_jit_err jit_boids3d_set_pos(t_jit_boids3d *flockPtr, void *attr, long argc, t_
     flockPtr->boid[id].oldPos[z] = pos[2];
 }
 
-
+/*
+    Changes the current direction of a boid
+ */
 t_jit_err jit_boids3d_set_dir(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
 	double dir[3];
@@ -508,6 +517,7 @@ t_jit_err jit_boids3d_set_dir(t_jit_boids3d *flockPtr, void *attr, long argc, t_
 	dir[1] = jit_atom_getfloat(argv+1);
 	dir[2] = jit_atom_getfloat(argv+2);
 	
+    //update the direction
 	flockPtr->boid[id].newDir[x] = dir[0];
 	flockPtr->boid[id].newDir[y] = dir[1];
 	flockPtr->boid[id].newDir[z] = dir[2];
@@ -517,6 +527,9 @@ t_jit_err jit_boids3d_set_dir(t_jit_boids3d *flockPtr, void *attr, long argc, t_
 }
 
 
+/*
+    Sets the speed of a boid
+ */
 t_jit_err jit_boids3d_set_speed(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
 	double speed;
@@ -527,7 +540,10 @@ t_jit_err jit_boids3d_set_speed(t_jit_boids3d *flockPtr, void *attr, long argc, 
 	flockPtr->boid[id].speed = speed;
 }
 
-
+/*
+    Sets the speed of a boid to its inverse
+    TODO: do we need this function??
+ */
 t_jit_err jit_boids3d_set_speedinv(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
 	double speed;
@@ -539,6 +555,9 @@ t_jit_err jit_boids3d_set_speedinv(t_jit_boids3d *flockPtr, void *attr, long arg
 }
 
 
+/*
+    Prepares the output matrix and sends it back to the max patch
+ */
 t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *outputs)
 {
 	t_jit_err err=JIT_ERR_NONE;
@@ -555,10 +574,12 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
 		
 		jit_object_method(out_matrix,_jit_sym_getinfo,&out_minfo);
 		
+        //dimensions of the output matrix (number of boids x 1)
 		out_minfo.dim[0] = flockPtr->number;
 		out_minfo.dim[1] = 1;
-		out_minfo.type = _jit_sym_float32;
+		out_minfo.type = _jit_sym_float32; //outputting floating point numbers
 		
+        //output the correct mode
 		switch(flockPtr->mode) { // newpos
 			case 0:
 				out_minfo.planecount = 4;
@@ -591,7 +612,7 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
 		return JIT_ERR_INVALID_PTR;
 	}
 	
-out:
+out: //output the matrix
 	jit_object_method(out_matrix,gensym("lock"),out_savelock);
 	return err;
 }
@@ -607,12 +628,14 @@ void jit_boids3d_calculate_ndim(t_jit_boids3d *flockPtr, long dimcount, long *di
 	double 	tempOld_x, tempOld_y, tempOld_z;
 	double	delta_x, delta_y, delta_z, azi, ele, speed;
 	
+    //do a step in the simulation
 	FlightStep(flockPtr);
 	
 	//copy pointer so we don't have to dereference in the for loop
 	boid = flockPtr->boid;
-	fop = (float *)bop;
+	fop = (float *)bop; //contains the planes
 	
+    //apply the correct mode and fill the planes with the correct info
     switch(flockPtr->mode) { // newpos
 		case 0:
 			for(i=0; i < dim[0]; i++) {
@@ -671,7 +694,9 @@ void jit_boids3d_calculate_ndim(t_jit_boids3d *flockPtr, long dimcount, long *di
 
 }
 
-//GRACE AND JACK CHANGED THIS HEAVILY
+/*
+    Calculates each boid's new velocity and updates position
+ */
 void FlightStep(t_jit_boids3d *flockPtr)
 {
 	double			goCenterVel[3];
@@ -693,13 +718,12 @@ void FlightStep(t_jit_boids3d *flockPtr)
 		flockPtr->boid[i].oldDir[z] = flockPtr->boid[i].newDir[z];
 	}
     
+    //for every boid in the simulation...
 	for (i = 0; i < flockPtr->number; i++) {
         
         int flockID = flockPtr->boid[i].flockID;
         
-        //post("\nThe boid's number is: %d, its flockID is %d", i, flockID);
-        
-        FindFlockCenter(flockPtr, i);
+        FindFlockCenter(flockPtr, i); //for centering instinct
         
 		if (flockPtr->neighbors > 0) {							// get all velocity components
 			avoidNeighborSpeed = MatchAndAvoidNeighbors(flockPtr, i, matchNeighborVel,  avoidNeighborVel);
@@ -714,11 +738,12 @@ void FlightStep(t_jit_boids3d *flockPtr)
 			
 			avoidNeighborSpeed = 0;
 		}
-		
-		//velocities passed in as argument
         
+        //update velocity to include centering and attracting instincts
 		SeekPoint(flockPtr, i, flockPtr->tempCenterPt, goCenterVel);
 		SeekPoint(flockPtr, i, flockPtr->attractpt, goAttractVel);
+        
+        //AVOID WALLS USED TO BE DONE HERE AS A COMPONENT OF VELOCITY
 		//AvoidWalls(flockPtr, i, avoidWallsVel);
         
         
@@ -749,7 +774,7 @@ void FlightStep(t_jit_boids3d *flockPtr)
 		else
 			flockPtr->boid[i].speed = flockPtr->minspeed[flockID];
         
-        //bouce back from walls
+        //bounce back from walls if the boid is beyond the limit of the simulation
         AvoidWalls(flockPtr, i, flockPtr->boid[i].newDir);
         
 		// calculate new position, applying speed
@@ -760,9 +785,10 @@ void FlightStep(t_jit_boids3d *flockPtr)
 	}
 }
 
-//GRACE AND JACK CHANGED THIS HEAVILY
-//Finds the center of a flock (not all boids)
-//modifies flockPtr->centerPt instead of returning a value
+/*
+    Calculates the center of a flock, saves it in flockPtr->centerPt
+    TODO: is this being done for every boid in a flock? Should be done only once
+ */
 void FindFlockCenter(t_jit_boids3d *flockPtr, long theBoid)
 {
     int flockID = flockPtr->boid[theBoid].flockID;
@@ -792,14 +818,11 @@ void FindFlockCenter(t_jit_boids3d *flockPtr, long theBoid)
         
     }
     
-    if(neighborsCount > 0){
+    if(neighborsCount > 0){ //get the average position of all boids in the flock
         flockPtr->tempCenterPt[x] = (double)	(totalH / neighborsCount);
         flockPtr->tempCenterPt[y] = (double)	(totalV / neighborsCount);
         flockPtr->tempCenterPt[z] = (double)	(totalD / neighborsCount);
-        
-        //post("New Center pt = {%f, %f, %f}",(double)	(totalH / neighborsCount),(double)	(totalV / neighborsCount), (double)	(totalD / neighborsCount));
-        //post("Center pt = {%f, %f, %f}", flockPtr->tempCenterPt[x], flockPtr->tempCenterPt[y], flockPtr->tempCenterPt[z]);
-    }else{
+    }else{ //only boid in flock, its position is the center point
         flockPtr->tempCenterPt[x] = flockPtr->boid[theBoid].oldPos[x];
         flockPtr->tempCenterPt[y] = flockPtr->boid[theBoid].oldPos[y];
         flockPtr->tempCenterPt[z] = flockPtr->boid[theBoid].oldPos[z];
@@ -807,7 +830,9 @@ void FindFlockCenter(t_jit_boids3d *flockPtr, long theBoid)
 
 }
 
-//GRACE AND JACK CHANGED THIS HEAVILY
+/*
+    Computes the matching and avoidance of neighbors instinct
+ */
 float MatchAndAvoidNeighbors(t_jit_boids3d *flockPtr, long theBoid, double *matchNeighborVel, double *avoidNeighborVel)
 {
 	long			i, j;
