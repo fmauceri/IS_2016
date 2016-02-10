@@ -33,9 +33,9 @@ const double		kCenterWeight	= 0.25;	// flock centering
 const double		kAttractWeight	= 0.300;// attraction point seeking
 const double		kMatchWeight	= 0.100;// neighbors velocity matching
 const double		kAvoidWeight	= 0.10;	// neighbors avoidance
-const double		kWallsWeight	= 0.500;// wall avoidance [210]
-const double		kEdgeDist		= 0.5;	// vision distance to avoid wall edges [5]
-const double		kSpeedupFactor	= 0.100;// alter animation speed
+const double		kWallsWeight	= 0.500;// wall avoidance [210] --  NOT USED
+const double		kEdgeDist		= 0.5;	// vision distance to avoid wall edges [5]  --  NOT USED
+const double		kSpeedupFactor	= 0.100;// alter animation speed    --  NOT USED
 const double		kInertiaFactor	= 0.20;	// willingness to change speed & direction
 const double		kAccelFactor	= 0.100;// neighbor avoidance accelerate or decelerate rate
 const double        kNRadius        = 0.25; // neighborhood radius
@@ -150,7 +150,7 @@ t_jit_err jit_boids3d_attract(t_jit_boids3d *flockPtr, void *attr, long argc, t_
 t_jit_err jit_boids3d_match(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
 t_jit_err jit_boids3d_avoid(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
 t_jit_err jit_boids3d_repel(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
-t_jit_err jit_boids3d_edgedist(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
+t_jit_err jit_boids3d_edgedist(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv); //NOT USED
 t_jit_err jit_boids3d_speed(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
 t_jit_err jit_boids3d_accel(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
 
@@ -159,7 +159,7 @@ void InitFlock(t_jit_boids3d *flockPtr);
 void Flock_donumBoids(t_jit_boids3d *flockPtr, long numBoids);
 void Flock_resetBoids(t_jit_boids3d *flockPtr);
 void Flock_resetNewBoids(t_jit_boids3d *flockPtr, int startingIndex);
-void Flock_reset(t_jit_boids3d *flockPtr);
+void Flock_reset(t_jit_boids3d *flockPtr); //NOT USED
 
 void FlightStep(t_jit_boids3d *flockPtr);
 void FindFlockCenter(t_jit_boids3d *flockPtr, long theBoid);
@@ -170,7 +170,9 @@ char InFront(BoidPtr theBoid, BoidPtr neighbor);
 void NormalizeVelocity(double *direction);
 double RandomInt(double minRange, double maxRange);
 double DistSqrToPt(double *firstPoint, double *secondPoint);
-//
+
+//NOT USED: all of the set methods are not currently used. Appear to be used for setting the speed of a specific boid.
+//this implementation does not really make sense in the context of multiple flocks, would need to do something different
 t_jit_err jit_boids3d_set(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
 t_jit_err jit_boids3d_set_pos(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
 t_jit_err jit_boids3d_set_dir(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
@@ -774,7 +776,7 @@ void FlightStep(t_jit_boids3d *flockPtr)
 		else
 			flockPtr->boid[i].speed = flockPtr->minspeed[flockID];
         
-        //bounce back from walls if the boid is beyond the limit of the simulation
+        //bounce back from walls if the boid is beyond the limit of the flyrect
         AvoidWalls(flockPtr, i, flockPtr->boid[i].newDir);
         
 		// calculate new position, applying speed
