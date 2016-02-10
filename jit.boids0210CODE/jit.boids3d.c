@@ -25,7 +25,7 @@
 
 // initial flight parameters
 const int           kBoidMaxAge     = 100;
-const long			kNumBoids		= 0;	// number of boids
+const long			kNumBoids		= 0;	// number of boids for each flock
 const long			kNumNeighbors	= 2;	// must be <= kMaxNeighbors
 const double 		kMinSpeed		= 0.15;	// boids' minimum speed
 const double		kMaxSpeed		= 0.25;	// boids' maximum speed
@@ -76,6 +76,8 @@ typedef struct Boid {
 	long		neighbor[kMaxNeighbors];
 	double		neighborDistSqr[kMaxNeighbors];
     
+    struct Boid *nextBoid;
+    
 } Boid, *BoidPtr;
 
 typedef struct _jit_boids3d
@@ -113,7 +115,7 @@ typedef struct _jit_boids3d
 	double			attractpt[3];
 	long			attractPtCount;
 	
-	BoidPtr			boid;
+    BoidPtr         flockLL[MAX_FLOCKS]; //array holding 6 LLs of the flocks
 	
 	double 			d2r;
 	double			r2d;
@@ -150,9 +152,8 @@ t_jit_err jit_boids3d_accel(t_jit_boids3d *flockPtr, void *attr, long argc, t_at
 
 //Boids specific methods
 void InitFlock(t_jit_boids3d *flockPtr);
-void Flock_donumBoids(t_jit_boids3d *flockPtr, long numBoids);
-void Flock_resetBoids(t_jit_boids3d *flockPtr);
-void Flock_resetNewBoids(t_jit_boids3d *flockPtr, int startingIndex);
+BoidPtr InitLL(t_jit_boids3d *flockPtr, long numBoids); //void Flock_donumBoids(t_jit_boids3d *flockPtr, long numBoids);
+BoidPtr InitBoid(t_jit_boids3d *flockPtr);
 
 void FlightStep(t_jit_boids3d *flockPtr);
 void FindFlockCenter(t_jit_boids3d *flockPtr, long theBoid);
@@ -184,7 +185,7 @@ t_jit_err jit_boids3d_init(void)
 	jit_class_addadornment(_jit_boids3d_class,mop);
 	//add methods
 	jit_class_addmethod(_jit_boids3d_class, (method)jit_boids3d_matrix_calc, 		"matrix_calc", 		A_CANT, 0L);
-	jit_class_addmethod(_jit_boids3d_class, (method)Flock_resetBoids, 				"reset", 			A_USURP_LOW, 0L);
+	jit_class_addmethod(_jit_boids3d_class, (method)InitBoid, 				"init_boid", 			A_USURP_LOW, 0L);
     
 	//add attributes
 	attrflags = JIT_ATTR_GET_DEFER_LOW | JIT_ATTR_SET_USURP_LOW;
@@ -395,46 +396,34 @@ t_jit_err jit_boids3d_number(t_jit_boids3d *flockPtr, void *attr, long argc, t_a
         return NULL;
     }
     
-    //create new array for all boids in all flocks
-    Boid *boidArray = (Boid *) jit_getbytes(sizeof(Boid)*newNumBoids);
-    
-    int index = 0;
-    
-    //for every boid, check if it needs to be deleted
-    for (int i=0; i<flockPtr->number; i++){
-        if (boidChanges[flockPtr->boid[i].flockID] < 0){ //not adding this boid, increment boidChanges by 1
-            //we're deleting this boid
-            boidChanges[flockPtr->boid[i].flockID]++;
-        }
-        else{
-            //add this boid to the new array
-            boidArray[index] = flockPtr->boid[i]; //add this boid to the new total boids array
-            index++;
-        }
-    }
-    
-    //index of the last boid in boidArray
-    int indexOfNewBoids = index;
-    
-    //assigns flock IDs to new boids
-    for (int i=0; i<6; i++){
-        while (boidChanges[i] > 0){
-            //add a new boid
-            boidArray[index].flockID = i;
-            boidChanges[i]--;
-            index++;
+    for (int i=0; i<MAX_FLOCKS; i++){
+        
+        if(boidChanges[i] == 0) continue; //no changes in this flock
+        
+        else if(boidChanges[i] < 0){ //we're deleting boids
+            BoidPtr iterator = flockPtr->flockLL[i];
+            BoidPtr toBeDeleted = iterator;
+            while (boidChanges[i] < 0){
+                iterator = iterator->nextBoid;
+                free(toBeDeleted);
+                toBeDeleted = iterator;
+                flockPtr->boidCount[i]--; //update the number of boids in flock
+                boidChanges[i]++;
+            }
+        }else{ //we're adding boids
+            for (int i=0; i<boidChanges[i]; i++){
+                BoidPtr newBoid = InitBoid(flockPtr);
+                if(!newBoid){
+                    return -1;
+                }
+                newBoid->nextBoid = flockPtr->flockLL[i];
+                flockPtr->flockLL[i] = newBoid;
+                newBoid->flockID = i;
+                flockPtr->boidCount[i]++; //update the number of boids in flock
+            }
         }
     }
-    
-    //THIS IS WHERE WE CAN QUICKSORT THE BOID ARRAY IN THE CODE SINCE BUBBLE SORT (IN MAX) IS INEFFICIENT
-    
-    //Assign the new array to be flockPtr->boid
-    flockPtr->number = newNumBoids;
-    Flock_donumBoids(flockPtr, newNumBoids);
-    flockPtr->boid = boidArray;
-    
-    
-    Flock_resetNewBoids(flockPtr, indexOfNewBoids);
+    return 0;
 }
 
 
@@ -500,7 +489,9 @@ out: //output the matrix
 	return err;
 }
 
-//GRACE AND JACK CHANGED THIS HEAVILY
+/*
+ 
+ */
 void jit_boids3d_calculate_ndim(t_jit_boids3d *flockPtr, long dimcount, long *dim, long planecount,
                                 t_jit_matrix_info *out_minfo, char *bop)
 {
@@ -514,67 +505,82 @@ void jit_boids3d_calculate_ndim(t_jit_boids3d *flockPtr, long dimcount, long *di
     //do a step in the simulation
 	FlightStep(flockPtr);
 	
-	//copy pointer so we don't have to dereference in the for loop
-	boid = flockPtr->boid;
 	fop = (float *)bop; //contains the planes
 	
-    //apply the correct mode and fill the planes with the correct info
+    
     switch(flockPtr->mode) { // newpos
-		case 0:
-			for(i=0; i < dim[0]; i++) {
-				fop[0] = boid[i].newPos[x];
-				fop[1] = boid[i].newPos[y];
-				fop[2] = boid[i].newPos[z];
-                fop[3] = boid[i].flockID;
-				
-				fop += planecount;
-			}
+        case 0:
+            for (int i=0; i<MAX_FLOCKS; i++){
+                BoidPtr iterator = flockPtr->flockLL[i];
+                
+                for (int j=0; j<flockPtr->boidCount[i]; j++){ //iterate thru the boids in the flock
+                    fop[0] = iterator->newPos[x];
+                    fop[1] = iterator->newPos[y];
+                    fop[2] = iterator->newPos[z];
+                    fop[3] = iterator->flockID;
+                    
+                    fop += planecount;
+                    
+                    iterator = iterator->nextBoid; //move to next boid
+                }
+            }
             break;
-		case 1: //newpos + oldpos
-			for(i=0; i < dim[0]; i++) {
-				fop[0] = boid[i].newPos[x];
-				fop[1] = boid[i].newPos[y];
-				fop[2] = boid[i].newPos[z];
-                fop[3] = boid[i].flockID;
-				fop[4] = boid[i].oldPos[x];
-				fop[5] = boid[i].oldPos[y];
-				fop[6] = boid[i].oldPos[z];
-				
-				fop += planecount;
-			}
+        case 1:
+            for (int i=0; i<MAX_FLOCKS; i++){
+                BoidPtr iterator = flockPtr->flockLL[i];
+                
+                for (int j=0; j<flockPtr->boidCount[i]; j++){ //iterate thru the boids in the flock
+                    fop[0] = iterator->newPos[x];
+                    fop[1] = iterator->newPos[y];
+                    fop[2] = iterator->newPos[z];
+                    fop[3] = iterator->flockID;
+                    fop[4] = iterator->oldPos[x];
+                    fop[5] = iterator->oldPos[y];
+                    fop[6] = iterator->oldPos[z];
+                    
+                    fop += planecount;
+                    
+                    iterator = iterator->nextBoid; //move to next boid
+                }
+            }
             break;
-		case 2: //newpos + oldpos + speed-azimuth-elevation
-			for(i=0; i < dim[0]; i++) {
-				tempNew_x = boid[i].newPos[x];
-				tempNew_y = boid[i].newPos[y];
-				tempNew_z = boid[i].newPos[z];
-				tempOld_x = boid[i].oldPos[x];
-				tempOld_y = boid[i].oldPos[y];
-				tempOld_z = boid[i].oldPos[z];
-				
-				delta_x = tempNew_x - tempOld_x;
-				delta_y = tempNew_y - tempOld_y;
-				delta_z = tempNew_z - tempOld_z;
-				azi = jit_math_atan2(delta_z, delta_x) * flockPtr->r2d;
-				ele = jit_math_atan2(delta_y, delta_x) * flockPtr->r2d;
-				speed = jit_math_sqrt(delta_x * delta_x + delta_y * delta_y + delta_z * delta_z);
-				
-				fop[0] = tempNew_x;
-				fop[1] = tempNew_y;
-				fop[2] = tempNew_z;
-                fop[3] = boid[i].flockID;
-				fop[4] = tempOld_x;
-				fop[5] = tempOld_y;
-				fop[6] = tempOld_z;
-				fop[7] = speed;
-				fop[8] = azi;
-				fop[9] = ele;
-				
-				fop += planecount;
-			}
+        case 2:
+            for (int i=0; i<MAX_FLOCKS; i++){
+                BoidPtr iterator = flockPtr->flockLL[i];
+                
+                for (int j=0; j<flockPtr->boidCount[i]; j++){ //iterate thru the boids in the flock
+                    tempNew_x = iterator->newPos[x];
+                    tempNew_y = iterator->newPos[y];
+                    tempNew_z = iterator->newPos[z];
+                    tempOld_x = iterator->oldPos[x];
+                    tempOld_y = iterator->oldPos[y];
+                    tempOld_z = iterator->oldPos[z];
+                    
+                    delta_x = tempNew_x - tempOld_x;
+                    delta_y = tempNew_y - tempOld_y;
+                    delta_z = tempNew_z - tempOld_z;
+                    azi = jit_math_atan2(delta_z, delta_x) * flockPtr->r2d;
+                    ele = jit_math_atan2(delta_y, delta_x) * flockPtr->r2d;
+                    speed = jit_math_sqrt(delta_x * delta_x + delta_y * delta_y + delta_z * delta_z);
+                    
+                    fop[0] = tempNew_x;
+                    fop[1] = tempNew_y;
+                    fop[2] = tempNew_z;
+                    fop[3] = iterator->flockID;
+                    fop[4] = tempOld_x;
+                    fop[5] = tempOld_y;
+                    fop[6] = tempOld_z;
+                    fop[7] = speed;
+                    fop[8] = azi;
+                    fop[9] = ele;
+                    
+                    fop += planecount;
+                    
+                    iterator = iterator->nextBoid; //move to next boid
+                }
+            }
             break;
-	}
-
+    }
 }
 
 /*
@@ -1042,98 +1048,12 @@ double DistSqrToPt(double *firstPoint, double *secondPoint)
 	return(a * a + b * b + c * c);
 }
 
-//GRACE AND JACK CHANGED THIS HEAVILY
-void Flock_resetNewBoids(t_jit_boids3d *flockPtr, int startingIndex)
-{
-    long i, j;
-	double rndAngle;
-	
-	for (i = startingIndex; i <  flockPtr->number; i++) { // init everything to 0.0
-		flockPtr->boid[i].oldPos[x] = 0.0;
-		flockPtr->boid[i].oldPos[y] = 0.0;
-		flockPtr->boid[i].oldPos[z] = 0.0;
-        
-		flockPtr->boid[i].newPos[x] = 0.0;
-		flockPtr->boid[i].newPos[y] = 0.0;
-		flockPtr->boid[i].newPos[z] = 0.0;
-		
-		flockPtr->boid[i].oldDir[x] = 0.0;
-		flockPtr->boid[i].oldDir[y] = 0.0;
-		flockPtr->boid[i].oldDir[z] = 0.0;
-		
-		flockPtr->boid[i].newDir[x] = 0.0;
-		flockPtr->boid[i].newDir[y] = 0.0;
-		flockPtr->boid[i].newDir[z] = 0.0;
-		
-		flockPtr->boid[i].speed = 0.0;
-		
-		for(j=0; j<kMaxNeighbors;j++) {
-			flockPtr->boid[i].neighbor[j] = 0;
-			flockPtr->boid[i].neighborDistSqr[j] = 0.0;
-		}
-	}
-	
-	for (i = startingIndex; i <  flockPtr->number; i++) {				// set the initial locations and velocities of the boids
-		flockPtr->boid[i].newPos[x] = flockPtr->boid[i].oldPos[x] = RandomInt(flockPtr->flyrect[right],flockPtr->flyrect[left]);		// set random location within flyrect
-		flockPtr->boid[i].newPos[y] = flockPtr->boid[i].oldPos[y] = RandomInt(flockPtr->flyrect[bottom], flockPtr->flyrect[top]);
-		flockPtr->boid[i].newPos[z] = flockPtr->boid[i].oldPos[z] = RandomInt(flockPtr->flyrect[back], flockPtr->flyrect[front]);
-		rndAngle = RandomInt(0, 360) * flockPtr->d2r;		// set velocity from random angle
-		flockPtr->boid[i].newDir[x] = jit_math_sin(rndAngle);
-		flockPtr->boid[i].newDir[y] = jit_math_cos(rndAngle);
-		flockPtr->boid[i].newDir[z] = (jit_math_cos(rndAngle) + jit_math_sin(rndAngle)) * 0.5;
-		flockPtr->boid[i].speed = (kMaxSpeed + kMinSpeed) * 0.5;
-	}
-}
-
-//UPDATED
-void Flock_resetBoids(t_jit_boids3d *flockPtr)
-{
-	long i, j;
-	double rndAngle;
-	
-	for (i = 0; i <  flockPtr->number; i++) { // init everything to 0.0
-		flockPtr->boid[i].oldPos[x] = 0.0;
-		flockPtr->boid[i].oldPos[y] = 0.0;
-		flockPtr->boid[i].oldPos[z] = 0.0;
-        
-		flockPtr->boid[i].newPos[x] = 0.0;
-		flockPtr->boid[i].newPos[y] = 0.0;
-		flockPtr->boid[i].newPos[z] = 0.0;
-		
-		flockPtr->boid[i].oldDir[x] = 0.0;
-		flockPtr->boid[i].oldDir[y] = 0.0;
-		flockPtr->boid[i].oldDir[z] = 0.0;
-		
-		flockPtr->boid[i].newDir[x] = 0.0;
-		flockPtr->boid[i].newDir[y] = 0.0;
-		flockPtr->boid[i].newDir[z] = 0.0;
-		
-		flockPtr->boid[i].speed = 0.0;
-		
-		for(j=0; j<kMaxNeighbors;j++) {
-			flockPtr->boid[i].neighbor[j] = 0;
-			flockPtr->boid[i].neighborDistSqr[j] = 0.0;
-		}
-	}
-	
-	for (i = 0; i <  flockPtr->number; i++) {				// set the initial locations and velocities of the boids
-		flockPtr->boid[i].newPos[x] = flockPtr->boid[i].oldPos[x] = RandomInt(flockPtr->flyrect[right],flockPtr->flyrect[left]);		// set random location within flyrect
-		flockPtr->boid[i].newPos[y] = flockPtr->boid[i].oldPos[y] = RandomInt(flockPtr->flyrect[bottom], flockPtr->flyrect[top]);
-		flockPtr->boid[i].newPos[z] = flockPtr->boid[i].oldPos[z] = RandomInt(flockPtr->flyrect[back], flockPtr->flyrect[front]);
-		rndAngle = RandomInt(0, 360) * flockPtr->d2r;		// set velocity from random angle
-		flockPtr->boid[i].newDir[x] = jit_math_sin(rndAngle);
-		flockPtr->boid[i].newDir[y] = jit_math_cos(rndAngle);
-		flockPtr->boid[i].newDir[z] = (jit_math_cos(rndAngle) + jit_math_sin(rndAngle)) * 0.5;
-		flockPtr->boid[i].speed = (kMaxSpeed + kMinSpeed) * 0.5;
-	}
-}
-
 
 //GRACE AND JACK CHANGED THIS HEAVILY
 void InitFlock(t_jit_boids3d *flockPtr)
 {
     //General initialization
-    flockPtr->number            = kNumBoids;	//added init for jitter object
+    flockPtr->number            = kNumBoids*MAX_FLOCKS;	//added init for jitter object
     flockPtr->neighbors			= kNumNeighbors;
     
     flockPtr->flyrect[top]		= kFlyRectTop;
@@ -1147,17 +1067,18 @@ void InitFlock(t_jit_boids3d *flockPtr)
     flockPtr->attractpt[z]		= (kFlyRectFront + kFlyRectBack) * 0.5;
     flockPtr->allowNeighborsFromDiffFlock = 1;
     
-    Flock_donumBoids(flockPtr, flockPtr->number);
-    
-    //Set every boids flockID and age to 0 for initialization
-    for (int i = 0; i <  flockPtr->number; i++){
-        flockPtr->boid[i].flockID = 0;
-        flockPtr->boid[i].age = 0;
-    }
-
     
     //Flock specific initialization
     for(int i=0; i<MAX_FLOCKS; i++){
+        
+        //create the linked list
+        BoidPtr newLL = InitLL(flockPtr, kNumBoids);
+        if(!newLL){
+            //error creating linked list
+            return NULL;
+        }
+        flockPtr->flockLL[i] = newLL; //add LL to the array
+        
         flockPtr->minspeed[i]			= kMinSpeed;
         flockPtr->maxspeed[i]			= kMaxSpeed;
         flockPtr->center[i]             = kCenterWeight;
@@ -1171,21 +1092,85 @@ void InitFlock(t_jit_boids3d *flockPtr)
         flockPtr->accel[i]              = kAccelFactor;
         flockPtr->neighborRadius[i]     = kNRadius;
     }
-    Flock_resetBoids(flockPtr);
 }
 
-//GRACE AND JACK CHANGED THIS HEAVILY
-void Flock_donumBoids(t_jit_boids3d *flockPtr, long numBoids)
+
+/*
+    Initializes a LL. Returns a pointer to its head
+ */
+BoidPtr InitLL(t_jit_boids3d *flockPtr, long numBoids)
 {
-	//if not NULL, deallocate memory before assigning new memory
-	//could check for whether flockPtr->number changed in value but not really
-	//necessary as speed isn't the biggest issue in setting this param
-	if(flockPtr->boid) {
-		jit_boids3d_free(flockPtr);
-	}
-	
-	flockPtr->boid = (Boid *) jit_getbytes(sizeof(Boid)*numBoids);
+    BoidPtr head = NULL;
+    for(int i=0; i < numBoids; i++){
+        
+        BoidPtr theBoid = InitBoid(flockPtr); //make a new boid
+        if(!theBoid){
+            return NULL;
+        }
+        
+        //Add the boid to the LL or make it the head (if nothing has already been added)
+        if (head == NULL){
+            head = theBoid;
+            theBoid->nextBoid = NULL;
+        }else{
+            theBoid->nextBoid = head;
+            head = theBoid;
+        }
+        
+    }
+    
+    return head;
 }
+
+
+/*
+    Allocates memory for a Boid struct and returns a pointer to it
+ */
+
+BoidPtr InitBoid(t_jit_boids3d *flockPtr)
+{
+    BoidPtr theBoid = malloc(sizeof(Boid));
+    
+    if(!BoidPtr){
+        return NULL;
+    }
+    
+    //initialize struct variables
+    theBoid->oldPos[x] = 0.0;
+    theBoid->oldPos[y] = 0.0;
+    theBoid->oldPos[z] = 0.0;
+    
+    theBoid->newPos[x] = 0.0;
+    theBoid->newPos[y] = 0.0;
+    theBoid->newPos[z] = 0.0;
+    
+    theBoid->oldDir[x] = 0.0;
+    theBoid->oldDir[y] = 0.0;
+    theBoid->oldDir[z] = 0.0;
+    
+    theBoid->newDir[x] = 0.0;
+    theBoid->newDir[y] = 0.0;
+    theBoid->newDir[z] = 0.0;
+    
+    theBoid->speed = 0.0;
+    
+    theBoid->newPos[x] = theBoid->oldPos[x] = RandomInt(flockPtr->flyrect[right],flockPtr->flyrect[left]);		// set random location within flyrect
+    theBoid->newPos[y] = theBoid->oldPos[y] = RandomInt(flockPtr->flyrect[bottom], flockPtr->flyrect[top]);
+    theBoid->newPos[z] = theBoid->oldPos[z] = RandomInt(flockPtr->flyrect[back], flockPtr->flyrect[front]);
+    rndAngle = RandomInt(0, 360) * flockPtr->d2r;		// set velocity from random angle
+    theBoid->newDir[x] = jit_math_sin(rndAngle);
+    theBoid->newDir[y] = jit_math_cos(rndAngle);
+    theBoid->newDir[z] = (jit_math_cos(rndAngle) + jit_math_sin(rndAngle)) * 0.5;
+    theBoid->speed = (kMaxSpeed + kMinSpeed) * 0.5;
+    
+    for(j=0; j<kMaxNeighbors;j++) {
+        theBoid->neighbor[j] = 0;
+        theBoid->neighborDistSqr[j] = 0.0;
+    }
+    
+    return theBoid;
+}
+
 
 
 t_jit_boids3d *jit_boids3d_new(void)
@@ -1197,7 +1182,6 @@ t_jit_boids3d *jit_boids3d_new(void)
 		flockPtr->flyRectCount		= 6;
 		flockPtr->attractPtCount	= 3;
 		flockPtr->mode	 			= 0;
-		flockPtr->boid 				= NULL;
 		
 		//init boids params
 		InitFlock(flockPtr);
