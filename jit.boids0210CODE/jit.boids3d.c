@@ -126,7 +126,7 @@ void *_jit_boids3d_class;
 
 t_jit_err jit_boids3d_init(void);
 t_jit_boids3d *jit_boids3d_new(void);
-void jit_boids3d_free(t_jit_boids3d *flockPtr);
+void freeFlocks(t_jit_boids3d *flockPtr);
 t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *outputs);
 
 void jit_boids3d_calculate_ndim(t_jit_boids3d *flockPtr, long dimcount, long *dim, long planecount,
@@ -156,10 +156,10 @@ BoidPtr InitLL(t_jit_boids3d *flockPtr, long numBoids); //void Flock_donumBoids(
 BoidPtr InitBoid(t_jit_boids3d *flockPtr);
 
 void FlightStep(t_jit_boids3d *flockPtr);
-void FindFlockCenter(t_jit_boids3d *flockPtr, long theBoid);
-float MatchAndAvoidNeighbors(t_jit_boids3d *flockPtr, long theBoid, double *matchNeighborVel, double *avoidNeighborVel);
-void SeekPoint(t_jit_boids3d *flockPtr, long theBoid, double *seekPt, double* seekDir);
-void AvoidWalls(t_jit_boids3d *flockPtr, long theBoid, double *wallVel);
+void FindFlockCenter(t_jit_boids3d *flockPtr, BoidPtr theBoid);
+float MatchAndAvoidNeighbors(t_jit_boids3d *flockPtr, BoidPtr theBoid, double *matchNeighborVel, double *avoidNeighborVel);
+void SeekPoint(t_jit_boids3d *flockPtr, BoidPtr theBoid, double *seekPt, double* seekDir);
+void AvoidWalls(t_jit_boids3d *flockPtr, BoidPtr theBoid, double *wallVel);
 char InFront(BoidPtr theBoid, BoidPtr neighbor);
 void NormalizeVelocity(double *direction);
 double RandomInt(double minRange, double maxRange);
@@ -174,7 +174,7 @@ t_jit_err jit_boids3d_init(void)
 	
 	atsym = gensym("jit_attr_offset");
 	
-	_jit_boids3d_class = jit_class_new("jit_boids3d",(method)jit_boids3d_new,(method)jit_boids3d_free,
+	_jit_boids3d_class = jit_class_new("jit_boids3d",(method)jit_boids3d_new,(method)freeFlocks,
                                        sizeof(t_jit_boids3d),0L);
     
 	//add mop
@@ -584,154 +584,166 @@ void jit_boids3d_calculate_ndim(t_jit_boids3d *flockPtr, long dimcount, long *di
 }
 
 /*
-    Calculates each boid's new velocity and updates position
+ Calculates each boid's new velocity and updates position
  */
 void FlightStep(t_jit_boids3d *flockPtr)
 {
-	double			goCenterVel[3];
-	double			goAttractVel[3];
-	double			matchNeighborVel[3];
+    double			goCenterVel[3];
+    double			goAttractVel[3];
+    double			matchNeighborVel[3];
     double			avoidWallsVel[3];
-	double			avoidNeighborVel[3];
-	double			avoidNeighborSpeed;
-	const double	zeroVel[3]	= {0.0, 0.0, 0.0};
-	long			i;
+    double			avoidNeighborVel[3];
+    double			avoidNeighborSpeed;
+    const double	zeroVel[3]	= {0.0, 0.0, 0.0};
+    long			i;
     
-	for (i = 0; i <  flockPtr->number; i++) {						// save position and velocity
-		flockPtr->boid[i].oldPos[x] = flockPtr->boid[i].newPos[x];
-		flockPtr->boid[i].oldPos[y] = flockPtr->boid[i].newPos[y];
-		flockPtr->boid[i].oldPos[z] = flockPtr->boid[i].newPos[z];
-		 
-		flockPtr->boid[i].oldDir[x] = flockPtr->boid[i].newDir[x];
-		flockPtr->boid[i].oldDir[y] = flockPtr->boid[i].newDir[y];
-		flockPtr->boid[i].oldDir[z] = flockPtr->boid[i].newDir[z];
-	}
-    
-    //for every boid in the simulation...
-	for (i = 0; i < flockPtr->number; i++) {
-        
-        int flockID = flockPtr->boid[i].flockID;
-        
-        FindFlockCenter(flockPtr, i); //for centering instinct
-        
-		if (flockPtr->neighbors > 0) {							// get all velocity components
-			avoidNeighborSpeed = MatchAndAvoidNeighbors(flockPtr, i, matchNeighborVel,  avoidNeighborVel);
-		} else {
-			matchNeighborVel[x] = zeroVel[x];
-			matchNeighborVel[y] = zeroVel[y];
-			matchNeighborVel[z] = zeroVel[z];
+    //get every boid from every flock
+    for (int i=0; i<MAX_FLOCKS; i++){
+        BoidPtr iterator = flockPtr->flockLL[i];
+        while(iterator){ //grab every boid from this flock
             
-			avoidNeighborVel[x] = zeroVel[x];
-			avoidNeighborVel[y] = zeroVel[y];
-			avoidNeighborVel[z] = zeroVel[z];
-			
-			avoidNeighborSpeed = 0;
-		}
-        
-        //update velocity to include centering and attracting instincts
-		SeekPoint(flockPtr, i, flockPtr->tempCenterPt, goCenterVel);
-		SeekPoint(flockPtr, i, flockPtr->attractpt, goAttractVel);
-        
-        //AVOID WALLS USED TO BE DONE HERE AS A COMPONENT OF VELOCITY
-		//AvoidWalls(flockPtr, i, avoidWallsVel);
-        
-        
-		// compute resultant velocity using weights and inertia
-		flockPtr->boid[i].newDir[x] = flockPtr->inertia[flockID] * (flockPtr->boid[i].oldDir[x]) +
-        (flockPtr->center[flockID] * goCenterVel[x] +
-         flockPtr->attract[flockID] * goAttractVel[x] +
-         flockPtr->match[flockID] * matchNeighborVel[x] +
-         flockPtr->avoid[flockID] * avoidNeighborVel[x]) / flockPtr->inertia[flockID];
-		flockPtr->boid[i].newDir[y] = flockPtr->inertia[flockID] * (flockPtr->boid[i].oldDir[y]) +
-        (flockPtr->center[flockID] * goCenterVel[y] +
-         flockPtr->attract[flockID] * goAttractVel[y] +
-         flockPtr->match[flockID] * matchNeighborVel[y] +
-         flockPtr->avoid[flockID] * avoidNeighborVel[y]) / flockPtr->inertia[flockID];
-		flockPtr->boid[i].newDir[z] = flockPtr->inertia[flockID] * (flockPtr->boid[i].oldDir[z]) +
-        (flockPtr->center[flockID] * goCenterVel[z] +
-         flockPtr->attract[flockID] * goAttractVel[z] +
-         flockPtr->match[flockID] * matchNeighborVel[z] +
-         flockPtr->avoid[flockID] * avoidNeighborVel[z]) / flockPtr->inertia[flockID];
-		NormalizeVelocity(flockPtr->boid[i].newDir);	// normalize velocity so its length is unity
-        
-		// set to avoidNeighborSpeed bounded by minspeed and maxspeed
-		if ((avoidNeighborSpeed >= flockPtr->minspeed[flockID]) &&
-            (avoidNeighborSpeed <= flockPtr->maxspeed[flockID]))
-			flockPtr->boid[i].speed = avoidNeighborSpeed;
-		else if (avoidNeighborSpeed > flockPtr->maxspeed[flockID])
-			flockPtr->boid[i].speed = flockPtr->maxspeed[flockID];
-		else
-			flockPtr->boid[i].speed = flockPtr->minspeed[flockID];
-        
-        //bounce back from walls if the boid is beyond the limit of the flyrect
-        AvoidWalls(flockPtr, i, flockPtr->boid[i].newDir);
-        
-		// calculate new position, applying speed
-		flockPtr->boid[i].newPos[x] += flockPtr->boid[i].newDir[x] * flockPtr->boid[i].speed * (flockPtr->speed[flockID] / 100.0);
-		flockPtr->boid[i].newPos[y] += flockPtr->boid[i].newDir[y] * flockPtr->boid[i].speed * (flockPtr->speed[flockID] / 100.0);
-		flockPtr->boid[i].newPos[z] += flockPtr->boid[i].newDir[z] * flockPtr->boid[i].speed * (flockPtr->speed[flockID] / 100.0);
-        
-	}
+            //save position and velocity
+            iterator->oldPos[x] = iterator->newPos[x];
+            iterator->oldPos[y] = iterator->newPos[y];
+            iterator->oldPos[z] = iterator->newPos[z];
+            
+            iterator->oldDir[x] = iterator->newDir[x];
+            iterator->oldDir[y] = iterator->newDir[y];
+            iterator->oldDir[z] = iterator->newDir[z];
+            
+            //calculate velocity updates
+            int flockID = iterator->flockID;
+            
+            FindFlockCenter(flockPtr, iterator); //for centering instinct
+            
+            if (flockPtr->neighbors > 0) {							// get all velocity components
+                avoidNeighborSpeed = MatchAndAvoidNeighbors(flockPtr, i, matchNeighborVel,  avoidNeighborVel);
+            } else {
+                matchNeighborVel[x] = zeroVel[x];
+                matchNeighborVel[y] = zeroVel[y];
+                matchNeighborVel[z] = zeroVel[z];
+                
+                avoidNeighborVel[x] = zeroVel[x];
+                avoidNeighborVel[y] = zeroVel[y];
+                avoidNeighborVel[z] = zeroVel[z];
+                
+                avoidNeighborSpeed = 0;
+            }
+            
+            //update velocity to include centering and attracting instincts
+            SeekPoint(flockPtr, i, flockPtr->tempCenterPt, goCenterVel);
+            SeekPoint(flockPtr, i, flockPtr->attractpt, goAttractVel);
+            
+            //AVOID WALLS USED TO BE DONE HERE AS A COMPONENT OF VELOCITY
+            //AvoidWalls(flockPtr, i, avoidWallsVel);
+            
+            
+            // compute resultant velocity using weights and inertia
+            iterator->newDir[x] = flockPtr->inertia[flockID] * (iterator->oldDir[x]) +
+            (flockPtr->center[flockID] * goCenterVel[x] +
+             flockPtr->attract[flockID] * goAttractVel[x] +
+             flockPtr->match[flockID] * matchNeighborVel[x] +
+             flockPtr->avoid[flockID] * avoidNeighborVel[x]) / flockPtr->inertia[flockID];
+            iterator->newDir[y] = flockPtr->inertia[flockID] * (iterator->oldDir[y]) +
+            (flockPtr->center[flockID] * goCenterVel[y] +
+             flockPtr->attract[flockID] * goAttractVel[y] +
+             flockPtr->match[flockID] * matchNeighborVel[y] +
+             flockPtr->avoid[flockID] * avoidNeighborVel[y]) / flockPtr->inertia[flockID];
+            iterator->newDir[z] = flockPtr->inertia[flockID] * (iterator->oldDir[z]) +
+            (flockPtr->center[flockID] * goCenterVel[z] +
+             flockPtr->attract[flockID] * goAttractVel[z] +
+             flockPtr->match[flockID] * matchNeighborVel[z] +
+             flockPtr->avoid[flockID] * avoidNeighborVel[z]) / flockPtr->inertia[flockID];
+            NormalizeVelocity(iterator->newDir);	// normalize velocity so its length is unity
+            
+            // set to avoidNeighborSpeed bounded by minspeed and maxspeed
+            if ((avoidNeighborSpeed >= flockPtr->minspeed[flockID]) &&
+                (avoidNeighborSpeed <= flockPtr->maxspeed[flockID]))
+                iterator->speed = avoidNeighborSpeed;
+            else if (avoidNeighborSpeed > flockPtr->maxspeed[flockID])
+                iterator->speed = flockPtr->maxspeed[flockID];
+            else
+                iterator->speed = flockPtr->minspeed[flockID];
+            
+            //bounce back from walls if the boid is beyond the limit of the flyrect
+            AvoidWalls(flockPtr, i, iterator->newDir);
+            
+            // calculate new position, applying speed
+            iterator->newPos[x] += iterator->newDir[x] * iterator->speed * (flockPtr->speed[flockID] / 100.0);
+            iterator->newPos[y] += iterator->newDir[y] * iterator->speed * (flockPtr->speed[flockID] / 100.0);
+            iterator->newPos[z] += iterator->newDir[z] * iterator->speed * (flockPtr->speed[flockID] / 100.0);
+            
+            //move to next boid
+            iterator = iterator->nextBoid;
+            
+        }
+    }
 }
 
 /*
     Calculates the center of a flock, saves it in flockPtr->centerPt
-    TODO: is this being done for every boid in a flock? Should be done only once
+    TODO: possible optimization = if we're only allowing boids from same flock, only calculate the center once for each flock
  */
-void FindFlockCenter(t_jit_boids3d *flockPtr, long theBoid)
+void FindFlockCenter(t_jit_boids3d *flockPtr, BoidPtr theBoid)
 {
-    int flockID = flockPtr->boid[theBoid].flockID;
+    int flockID = theBoid->flockID;
     double totalH = 0, totalV = 0, totalD = 0;
     int neighborsCount = 0;
     
-    for(int i=0; i<flockPtr->number; i++){
+    for(int i=0; i<MAX_FLOCKS; i++){ //grab every boid
         
-        //grab the boid and calculate distance
-        Boid currBoid = flockPtr->boid[i];
-        double dist = sqrt(DistSqrToPt(flockPtr->boid[theBoid].oldPos, flockPtr->boid[i].oldPos));
+        BoidPtr iterator = flockPtr->flockLL[i];
         
-        //ensure that the boid is not looking at itself and we're not overfilling neighborList
-        if(dist < flockPtr->neighborRadius[flockID] && dist > 0.0 && neighborsCount < kMaxNeighbors){
+        while(iterator){
             
-            //check to ensure this boid is allowed / in same flock
-            if (flockPtr->allowNeighborsFromDiffFlock == 0 && currBoid.flockID != flockID){
-                continue;
+            double dist = sqrt(DistSqrToPt(theBoid->oldPos, iterator->oldPos));
+            
+            if(dist < flockPtr->neighborRadius[flockID] && dist > 0.0 && neighborsCount < kMaxNeighbors){ //check if this boid is close enough to be a neighbor
+                
+                //check to ensure this boid is allowed / in same flock
+                if (flockPtr->allowNeighborsFromDiffFlock == 0 && iterator->flockID != flockID){
+                    continue;
+                }
+                
+                //this boid is a neighbor
+                neighborsCount++;
+                totalH += theBoid->oldPos[x];
+                totalV += theBoid->oldPos[y];
+                totalD += theBoid->oldPos[z];
             }
             
-            //this boid is a neighbor
-            neighborsCount++;
-            totalH += flockPtr->boid[i].oldPos[x];
-            totalV += flockPtr->boid[i].oldPos[y];
-            totalD += flockPtr->boid[i].oldPos[z];
+            
+            iterator = iterator->nextBoid; //move to next boid
         }
-        
     }
+    
+    //update the center point as an average of theBoid's neighbors
     
     if(neighborsCount > 0){ //get the average position of all boids in the flock
         flockPtr->tempCenterPt[x] = (double)	(totalH / neighborsCount);
         flockPtr->tempCenterPt[y] = (double)	(totalV / neighborsCount);
         flockPtr->tempCenterPt[z] = (double)	(totalD / neighborsCount);
     }else{ //only boid in flock, its position is the center point
-        flockPtr->tempCenterPt[x] = flockPtr->boid[theBoid].oldPos[x];
-        flockPtr->tempCenterPt[y] = flockPtr->boid[theBoid].oldPos[y];
-        flockPtr->tempCenterPt[z] = flockPtr->boid[theBoid].oldPos[z];
+        flockPtr->tempCenterPt[x] = theBoid->oldPos[x];
+        flockPtr->tempCenterPt[y] = theBoid->oldPos[y];
+        flockPtr->tempCenterPt[z] = theBoid->oldPos[z];
     }
 
 }
 
 /*
     Computes the matching and avoidance of neighbors instinct
+    TODO: This can be combined with FindFlockCenter (I think). Both find the neighbors of a boid and then do stuff
  */
-float MatchAndAvoidNeighbors(t_jit_boids3d *flockPtr, long theBoid, double *matchNeighborVel, double *avoidNeighborVel)
+float MatchAndAvoidNeighbors(t_jit_boids3d *flockPtr, BoidPtr theBoid, double *matchNeighborVel, double *avoidNeighborVel)
 {
-	long			i, j;
+	long			i;
     Boid            neighbor;
-	double			distSqr;
 	double			dist, distH, distV,distD;
 	double			tempSpeed;
 	short			numClose = 0;
 	double			totalVel[3] = {0.0,0.0,0.0};
-    int flockID = flockPtr->boid[theBoid].flockID;
+    int flockID = theBoid->flockID;
     
     Boid neighborList[kMaxNeighbors];
     int neighborsCount = 0; //counter to keep track of how many neighbors we've found
@@ -740,30 +752,29 @@ float MatchAndAvoidNeighbors(t_jit_boids3d *flockPtr, long theBoid, double *matc
 	/* Find the neighbors */
 	/**********************/
     
-    //loop through all boids
-    for(i=0; i<flockPtr->number; i++){
+    for(int i=0; i<MAX_FLOCKS; i++){ //grab every boid
         
-        //grab the boid and calculate distance
-        Boid currBoid = flockPtr->boid[i];
-        dist = sqrt(DistSqrToPt(flockPtr->boid[theBoid].oldPos, flockPtr->boid[i].oldPos));
+        BoidPtr iterator = flockPtr->flockLL[i];
         
-        //ensure that the boid is not looking at itself and we're not overfilling neighborList
-        if(dist < flockPtr->neighborRadius[flockID] && dist > 0.0 && neighborsCount < kMaxNeighbors){
+        while(iterator){
             
-            //check to ensure this boid is allowed / in same flock
-            if (flockPtr->allowNeighborsFromDiffFlock == 0 && currBoid.flockID != flockID){
-                continue;
+            double dist = sqrt(DistSqrToPt(theBoid->oldPos, iterator->oldPos));
+            
+            if(dist < flockPtr->neighborRadius[flockID] && dist > 0.0 && neighborsCount < kMaxNeighbors){ //check if this boid is close enough to be a neighbor
+                
+                //check to ensure this boid is allowed / in same flock
+                if (flockPtr->allowNeighborsFromDiffFlock == 0 && iterator->flockID != flockID){
+                    continue;
+                }
+                
+                //this boid is a neighbor
+                neighborList[neighborsCount] = *iterator;
+                neighborsCount++;
             }
             
-            //this boid is a neighbor
-            neighborList[neighborsCount] = currBoid;
-            neighborsCount++;
+            iterator = iterator->nextBoid; //move to next boid
         }
-        
     }
-    
-    
-    
     
 //	/* special case of one neighbor */
 //	if (flockPtr->neighbors == 1) {
@@ -817,7 +828,7 @@ float MatchAndAvoidNeighbors(t_jit_boids3d *flockPtr, long theBoid, double *matc
 	matchNeighborVel[z] = 0;
 	
 	// set tempSpeed to old speed
-	tempSpeed = flockPtr->boid[theBoid].speed;
+	tempSpeed = theBoid->speed;
 	
 	for (i = 0; i < neighborsCount; i++) {
 		neighbor = neighborList[i];
@@ -827,9 +838,9 @@ float MatchAndAvoidNeighbors(t_jit_boids3d *flockPtr, long theBoid, double *matc
 		matchNeighborVel[y] += neighbor.oldDir[y];
 		matchNeighborVel[z] += neighbor.oldDir[z];
         
-        distH = neighbor.oldPos[x] - flockPtr->boid[theBoid].oldPos[x];
-        distV = neighbor.oldPos[y] - flockPtr->boid[theBoid].oldPos[y];
-        distD = neighbor.oldPos[z] - flockPtr->boid[theBoid].oldPos[z];
+        distH = neighbor.oldPos[x] - theBoid->oldPos[x];
+        distV = neighbor.oldPos[y] - theBoid->oldPos[y];
+        distD = neighbor.oldPos[z] - theBoid->oldPos[z];
         
         if(dist == 0.0) dist = 0.0000001;
         
@@ -842,13 +853,15 @@ float MatchAndAvoidNeighbors(t_jit_boids3d *flockPtr, long theBoid, double *matc
         numClose++;
 		
 		
-		if (InFront(&(flockPtr->boid[theBoid]), &(neighbor))) {	// adjust speed
+		if (InFront((theBoid), &(neighbor))) {	// adjust speed
 				tempSpeed /= (flockPtr->accel[flockID] / 100.0);
 		}
 		else {
 				tempSpeed *= (flockPtr->accel[flockID] / 100.0);
 		}
 	}
+    
+    //calculate resultant velocity
 	if (numClose) {
 		avoidNeighborVel[x] = totalVel[x] / numClose;
 		avoidNeighborVel[y] = totalVel[y] / numClose;
@@ -863,17 +876,24 @@ float MatchAndAvoidNeighbors(t_jit_boids3d *flockPtr, long theBoid, double *matc
 	return(tempSpeed);
 }
 
-//GRACE AND JACK CHANGED THIS HEAVILY
-//modified to take the returned velocity as an argument instead
-void SeekPoint(t_jit_boids3d *flockPtr, long theBoid, double *seekPt, double* seekDir)
+
+
+/*
+ 
+ */
+void SeekPoint(t_jit_boids3d *flockPtr, BoidPtr theBoid, double *seekPt, double* seekDir)
 {
-	seekDir[x] = seekPt[x] - flockPtr->boid[theBoid].oldPos[x];
-	seekDir[y] = seekPt[y] - flockPtr->boid[theBoid].oldPos[y];
-	seekDir[z] = seekPt[z] - flockPtr->boid[theBoid].oldPos[z];
+	seekDir[x] = seekPt[x] - theBoid->oldPos[x];
+	seekDir[y] = seekPt[y] - theBoid->oldPos[y];
+	seekDir[z] = seekPt[z] - theBoid->oldPos[z];
 	NormalizeVelocity(seekDir);
 }
 
-void AvoidWalls(t_jit_boids3d *flockPtr, long theBoid, double *wallVel)
+
+/*
+ 
+ */
+void AvoidWalls(t_jit_boids3d *flockPtr, BoidPtr theBoid, double *wallVel)
 {
 	double		testPoint[3];
     
@@ -883,9 +903,9 @@ void AvoidWalls(t_jit_boids3d *flockPtr, long theBoid, double *wallVel)
     
 	/* calculate test point in front of the nose of the boid */
 	/* distance depends on the boid's speed and the avoid edge constant */
-	testPoint[x] = flockPtr->boid[theBoid].oldPos[x] + flockPtr->boid[theBoid].newDir[x] * (flockPtr->boid[theBoid].speed * (flockPtr->speed[flockPtr->boid[theBoid].flockID] / 100.0));// * flockPtr->edgedist[flockPtr->boid[theBoid].flockID];
-    testPoint[y] = flockPtr->boid[theBoid].oldPos[y] + flockPtr->boid[theBoid].newDir[y] * (flockPtr->boid[theBoid].speed * (flockPtr->speed[flockPtr->boid[theBoid].flockID] / 100.0));// * flockPtr->edgedist[flockPtr->boid[theBoid].flockID];fl
-    testPoint[z] = flockPtr->boid[theBoid].oldPos[z] + flockPtr->boid[theBoid].newDir[z] * (flockPtr->boid[theBoid].speed * (flockPtr->speed[flockPtr->boid[theBoid].flockID] / 100.0));// * flockPtr->edgedist[flockPtr->boid[theBoid].flockID];
+	testPoint[x] = theBoid->oldPos[x] + theBoid->newDir[x] * (theBoid->speed * (flockPtr->speed[theBoid->flockID] / 100.0));// * flockPtr->edgedist[flockPtr->boid[theBoid].flockID];
+    testPoint[y] = theBoid->oldPos[y] + theBoid->newDir[y] * (theBoid->speed * (flockPtr->speed[theBoid->flockID] / 100.0));// * flockPtr->edgedist[flockPtr->boid[theBoid].flockID];
+    testPoint[z] = theBoid->oldPos[z] + theBoid->newDir[z] * (theBoid->speed * (flockPtr->speed[theBoid->flockID] / 100.0));// * flockPtr->edgedist[flockPtr->boid[theBoid].flockID];
 
     
 	/* if test point is out of the left (right) side of flockPtr->flyrect, */
@@ -908,6 +928,9 @@ void AvoidWalls(t_jit_boids3d *flockPtr, long theBoid, double *wallVel)
 		wallVel[z] = ABS(wallVel[z]);
 }
 
+/*
+ 
+ */
 char InFront(BoidPtr theBoid, BoidPtr neighbor)
 {
 	float	grad, intercept;
@@ -1049,7 +1072,9 @@ double DistSqrToPt(double *firstPoint, double *secondPoint)
 }
 
 
-//GRACE AND JACK CHANGED THIS HEAVILY
+/*
+ 
+ */
 void InitFlock(t_jit_boids3d *flockPtr)
 {
     //General initialization
@@ -1075,7 +1100,7 @@ void InitFlock(t_jit_boids3d *flockPtr)
         BoidPtr newLL = InitLL(flockPtr, kNumBoids);
         if(!newLL){
             //error creating linked list
-            return NULL;
+            exit(1);
         }
         flockPtr->flockLL[i] = newLL; //add LL to the array
         
@@ -1087,7 +1112,7 @@ void InitFlock(t_jit_boids3d *flockPtr)
         flockPtr->avoid[i]				= kAvoidWeight;
         flockPtr->repel[i]				= kWallsWeight;
         flockPtr->edgedist[i]			= kEdgeDist;
-        flockPtr->speed[i]				= kSpeedupFactor;
+        flockPtr->speed[i]				= kDefaultSpeed;
         flockPtr->inertia[i]			= kInertiaFactor;
         flockPtr->accel[i]              = kAccelFactor;
         flockPtr->neighborRadius[i]     = kNRadius;
@@ -1131,7 +1156,7 @@ BoidPtr InitBoid(t_jit_boids3d *flockPtr)
 {
     BoidPtr theBoid = malloc(sizeof(Boid));
     
-    if(!BoidPtr){
+    if(!theBoid){
         return NULL;
     }
     
@@ -1157,13 +1182,13 @@ BoidPtr InitBoid(t_jit_boids3d *flockPtr)
     theBoid->newPos[x] = theBoid->oldPos[x] = RandomInt(flockPtr->flyrect[right],flockPtr->flyrect[left]);		// set random location within flyrect
     theBoid->newPos[y] = theBoid->oldPos[y] = RandomInt(flockPtr->flyrect[bottom], flockPtr->flyrect[top]);
     theBoid->newPos[z] = theBoid->oldPos[z] = RandomInt(flockPtr->flyrect[back], flockPtr->flyrect[front]);
-    rndAngle = RandomInt(0, 360) * flockPtr->d2r;		// set velocity from random angle
+    double rndAngle = RandomInt(0, 360) * flockPtr->d2r;		// set velocity from random angle
     theBoid->newDir[x] = jit_math_sin(rndAngle);
     theBoid->newDir[y] = jit_math_cos(rndAngle);
     theBoid->newDir[z] = (jit_math_cos(rndAngle) + jit_math_sin(rndAngle)) * 0.5;
     theBoid->speed = (kMaxSpeed + kMinSpeed) * 0.5;
     
-    for(j=0; j<kMaxNeighbors;j++) {
+    for(int j=0; j<kMaxNeighbors;j++) {
         theBoid->neighbor[j] = 0;
         theBoid->neighborDistSqr[j] = 0.0;
     }
@@ -1172,7 +1197,9 @@ BoidPtr InitBoid(t_jit_boids3d *flockPtr)
 }
 
 
-
+/*
+ 
+ */
 t_jit_boids3d *jit_boids3d_new(void)
 {
 	t_jit_boids3d *flockPtr;
@@ -1194,8 +1221,41 @@ t_jit_boids3d *jit_boids3d_new(void)
 	return flockPtr;
 }
 
+/*
+    Free the linked lists containing all the boids
+    NOTE: this replaces the previous method: jit_boids3d_free
+ */
+void freeFlocks(t_jit_boids3d *flockPtr)
+{
+    for(int i=0; i<MAX_FLOCKS; i++){ //we're clearing each flock
+        
+        if(flockPtr->flockLL[i] == NULL){ //ensure that this flock is populated
+            continue;
+        }
+        
+        BoidPtr iterator = flockPtr->flockLL[i];
+        BoidPtr deletor = iterator;
+        
+        do{ //traverse the LL and free the memory for each boid
+            iterator = iterator->nextBoid;
+            
+            free(deletor);
+            deletor = iterator;
+            
+        }while (iterator);
+        
+        //mark the head null
+        flockPtr->flockLL[i] = NULL;
+        
+    }
+}
+
+
+/*
 void jit_boids3d_free(t_jit_boids3d *flockPtr)
 {
 	//free bytes allocated for boids struct
 	jit_freebytes((void *)flockPtr->boid, sizeof(Boid)*flockPtr->number);
 }
+*/
+
