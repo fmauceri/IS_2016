@@ -152,7 +152,7 @@ t_jit_err jit_boids3d_accel(t_jit_boids3d *flockPtr, void *attr, long argc, t_at
 
 //Boids specific methods
 void InitFlock(t_jit_boids3d *flockPtr);
-BoidPtr InitLL(t_jit_boids3d *flockPtr, long numBoids); //void Flock_donumBoids(t_jit_boids3d *flockPtr, long numBoids);
+BoidPtr InitLL(t_jit_boids3d *flockPtr, long numBoids, int flockID); //void Flock_donumBoids(t_jit_boids3d *flockPtr, long numBoids);
 BoidPtr InitBoid(t_jit_boids3d *flockPtr);
 
 void FlightStep(t_jit_boids3d *flockPtr);
@@ -164,6 +164,7 @@ char InFront(BoidPtr theBoid, BoidPtr neighbor);
 void NormalizeVelocity(double *direction);
 double RandomInt(double minRange, double maxRange);
 double DistSqrToPt(double *firstPoint, double *secondPoint);
+int CalcNumBoids(t_jit_boids3d *flockPtr);
 
 
 t_jit_err jit_boids3d_init(void)
@@ -447,7 +448,13 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
 		jit_object_method(out_matrix,_jit_sym_getinfo,&out_minfo);
 		
         //dimensions of the output matrix (number of boids x 1)
-		out_minfo.dim[0] = flockPtr->number;
+        int numBoids = CalcNumBoids(flockPtr);
+        if(numBoids == 0){
+            out_minfo.dim[0] = 1;
+        }else{
+            out_minfo.dim[0] = numBoids;
+        }
+		
 		out_minfo.dim[1] = 1;
 		out_minfo.type = _jit_sym_float32; //outputting floating point numbers
 		
@@ -495,9 +502,7 @@ out: //output the matrix
 void jit_boids3d_calculate_ndim(t_jit_boids3d *flockPtr, long dimcount, long *dim, long planecount,
                                 t_jit_matrix_info *out_minfo, char *bop)
 {
-	long i, k;
 	float *fop;
-	BoidPtr boid;
 	double 	tempNew_x, tempNew_y, tempNew_z;
 	double 	tempOld_x, tempOld_y, tempOld_z;
 	double	delta_x, delta_y, delta_z, azi, ele, speed;
@@ -1097,9 +1102,10 @@ void InitFlock(t_jit_boids3d *flockPtr)
     for(int i=0; i<MAX_FLOCKS; i++){
         
         //create the linked list
-        BoidPtr newLL = InitLL(flockPtr, kNumBoids);
+        BoidPtr newLL = InitLL(flockPtr, kNumBoids, i);
         if(!newLL){
             //error creating linked list
+            printf("ERROR: could not create linked list. Exiting...\n\n");
             exit(1);
         }
         flockPtr->flockLL[i] = newLL; //add LL to the array
@@ -1123,14 +1129,15 @@ void InitFlock(t_jit_boids3d *flockPtr)
 /*
     Initializes a LL. Returns a pointer to its head
  */
-BoidPtr InitLL(t_jit_boids3d *flockPtr, long numBoids)
+BoidPtr InitLL(t_jit_boids3d *flockPtr, long numBoids, int flockID)
 {
     BoidPtr head = NULL;
     for(int i=0; i < numBoids; i++){
         
         BoidPtr theBoid = InitBoid(flockPtr); //make a new boid
         if(!theBoid){
-            return NULL;
+            printf("ERROR: failed to malloc a boid\n");
+            exit(1);
         }
         
         //Add the boid to the LL or make it the head (if nothing has already been added)
@@ -1141,6 +1148,8 @@ BoidPtr InitLL(t_jit_boids3d *flockPtr, long numBoids)
             theBoid->nextBoid = head;
             head = theBoid;
         }
+        
+        flockPtr->boidCount[flockID]++;
         
     }
     
@@ -1194,6 +1203,18 @@ BoidPtr InitBoid(t_jit_boids3d *flockPtr)
     }
     
     return theBoid;
+}
+
+/*
+ 
+ */
+int CalcNumBoids(t_jit_boids3d *flockPtr)
+{
+    int boidsCounter = 0;
+    for (int i=0; i<MAX_FLOCKS; i++){
+        boidsCounter += flockPtr->boidCount[i];
+    }
+    return boidsCounter;
 }
 
 
