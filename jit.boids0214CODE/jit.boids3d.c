@@ -1,14 +1,12 @@
 /*
- jit.boids3d.c  12/15/2005 wesley smith
+ jit.boids3d.c -- Jack Truskowski and Grace Handler 2015-2016
  
  adapted from:
+ 12/15/2005 wesley smith
  boids3d 08/2005 a.sier / jasch adapted from boids by eric singer ÔøΩ 1995-2003 eric l. singer
  free for non-commercial use
- 
  modified 070207 by sier to set boids pos, etc
  
- Modified by Jack Truskowski and Grace Handler 2015 to add functionality for multiple flocks
- -- commented methods that were heavily edited
  */
 
 #include "jit.common.h"
@@ -603,8 +601,34 @@ void FlightStep(t_jit_boids3d *flockPtr)
     //get every boid from every flock
     for (int i=0; i<MAX_FLOCKS; i++){
         BoidPtr iterator = flockPtr->flockLL[i];
+        BoidPtr prevBoid = NULL;
         
         while(iterator){ //grab every boid from this flock
+            
+            //update age and check if it's this boid's time to die
+            iterator->age++;
+            if(iterator->age > kBoidMaxAge){
+                
+                BoidPtr deletor = iterator;
+                
+                //delete the boid and continue
+                if(!prevBoid){ //this boid is at the head of the linked list
+                    deletor = iterator;
+                    iterator = iterator->nextBoid;
+                    free(deletor);
+                    flockPtr->flockLL[i] = iterator;
+                    
+                }else{ //this boid is somewhere in the middle of the LL
+                    iterator = iterator->nextBoid;
+                    free(deletor);
+                    prevBoid->nextBoid = iterator;
+                }
+                
+                //update boid pointers and count and move to next boid
+                flockPtr->boidCount[i]--;
+                continue;
+                
+            }
             
             //save position and velocity
             
@@ -680,6 +704,7 @@ void FlightStep(t_jit_boids3d *flockPtr)
             iterator->newPos[z] += iterator->newDir[z] * iterator->speed * (flockPtr->speed[flockID] / 100.0);
             
             //move to next boid
+            prevBoid = iterator;
             iterator = iterator->nextBoid;
             
         }
@@ -1088,10 +1113,11 @@ BoidPtr InitBoid(t_jit_boids3d *flockPtr)
 {
     struct Boid * theBoid = (struct Boid *)malloc(sizeof(struct Boid));
     
-    
     if(!theBoid){
         return NULL;
     }
+    
+    theBoid->age = 0; //set age to 0
     
     //initialize struct variables
     theBoid->oldPos[x] = 0.0;
