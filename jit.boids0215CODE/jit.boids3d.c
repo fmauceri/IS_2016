@@ -129,8 +129,6 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
 
 void jit_boids3d_calculate_ndim(t_jit_boids3d *flockPtr, long dimcount, long *dim, long planecount,
                                 t_jit_matrix_info *out_minfo, char *bop);
-void jit_boids3d_calculate_ndim2(t_jit_boids3d *flockPtr, long dimcount, long *dim, long planecount,
-                                t_jit_matrix_info *out_minfo, char *bop); //for the second output matrix
 
 //attribute methods
 t_jit_err jit_boids3d_neighbors(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
@@ -177,11 +175,11 @@ t_jit_err jit_boids3d_init(void)
 	_jit_boids3d_class = jit_class_new("jit_boids3d",(method)jit_boids3d_new,(method)freeFlocks,
                                        sizeof(t_jit_boids3d),0L);
     
-	//add mop -- MOP is a matrix object
+	//add mop
 	mop = jit_object_new(_jit_sym_jit_mop,0,2);
 	o = jit_object_method(mop,_jit_sym_getoutput,1);
+    o2 = jit_object_method(mop,_jit_sym_getoutput,2);
 	jit_attr_setlong(o,_jit_sym_dimlink,0);
-    o2 = jit_object_method(mop,_jit_sym_getoutput,1);
     jit_attr_setlong(o2,_jit_sym_dimlink,0);
 	
 	jit_class_addadornment(_jit_boids3d_class,mop);
@@ -373,7 +371,7 @@ t_jit_err jit_boids3d_accel(t_jit_boids3d *flockPtr, void *attr, long argc, t_at
 }
 
 /*
-    This function is called when the number of boids in the maxpatch is changed. Creates and initializes a new array containing all boids
+ This function is called when the number of boids in the maxpatch is changed. Creates and initializes a new array containing all boids
  */
 t_jit_err jit_boids3d_number(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
@@ -434,17 +432,16 @@ t_jit_err jit_boids3d_number(t_jit_boids3d *flockPtr, void *attr, long argc, t_a
 
 
 /*
-    Prepares the output matrix and sends it back to the max patch
-        Refer to: https://cycling74.com/sdk/MaxSDK-6.0.4/html/chapter_jit_mopqs.html for help
+ Prepares the output matrix and sends it back to the max patch
  */
 t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *outputs)
 {
     
 	t_jit_err err=JIT_ERR_NONE;
 	long out_savelock, out2_savelock;
-    t_jit_matrix_info out_minfo, out2_minfo;
+	t_jit_matrix_info out_minfo, out2_minfo;
 	char *out_bp, *out2_bp;
-	long i, dimcount, planecount, dim[JIT_MATRIX_MAX_DIMCOUNT], dim2[JIT_MATRIX_MAX_DIMCOUNT], dimcount2, planecount2;
+	long i,dimcount,dimcount2,planecount,planecount2,dim[JIT_MATRIX_MAX_DIMCOUNT],dim2[JIT_MATRIX_MAX_DIMCOUNT];
 	void *out_matrix, *out2_matrix;
 	
 	out_matrix 	= jit_object_method(outputs,_jit_sym_getindex,0);
@@ -454,17 +451,8 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
 		out_savelock = (long) jit_object_method(out_matrix,_jit_sym_lock,1);
         out2_savelock = (long) jit_object_method(out2_matrix,_jit_sym_lock,1);
 		
-        //fill in matrix info structs for input and output
 		jit_object_method(out_matrix,_jit_sym_getinfo,&out_minfo);
         jit_object_method(out2_matrix,_jit_sym_getinfo,&out2_minfo);
-        
-        //get matrix data pointers
-        jit_object_method(out_matrix,_jit_sym_setinfo,&out_bp);
-        jit_object_method(out2_matrix,_jit_sym_getinfo,&out2_bp);
-        
-        //if data pointers are invalid, set error, and cleanup
-        if (!out_bp) { err=JIT_ERR_INVALID_OUTPUT; goto out;}
-        if (!out2_bp) { err=JIT_ERR_INVALID_OUTPUT; goto out;}
 		
         //dimensions of the output matrix (number of boids x 1)
         int numBoids = CalcNumBoids(flockPtr);
@@ -472,7 +460,13 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
         out_minfo.dim[0] = numBoids;
 		out_minfo.dim[1] = 1;
 		out_minfo.type = _jit_sym_float32; //outputting floating point numbers
+        
+        out2_minfo.dim[0] = MAX_FLOCKS;
+		out2_minfo.dim[1] = 1;
+		out2_minfo.type = _jit_sym_float32; //outputting floating point numbers
 		
+        out2_minfo.planecount = 1;
+        
         //output the correct mode
 		switch(flockPtr->mode) { // newpos
 			case 0:
@@ -485,53 +479,42 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
 				out_minfo.planecount = 10;
                 break;
 		}
-        
-        out2_minfo.planecount = 1;
-        out2_minfo.dim[0] = MAX_FLOCKS;
-        out2_minfo.dim[1] = 1;
-        out2_minfo.type = _jit_sym_float32;
 		
+		jit_object_method(out_matrix,_jit_sym_setinfo,&out_minfo);
+		jit_object_method(out_matrix,_jit_sym_getinfo,&out_minfo);
+        
+        jit_object_method(out2_matrix,_jit_sym_setinfo,&out2_minfo);
+		jit_object_method(out2_matrix,_jit_sym_getinfo,&out2_minfo);
+		
+		jit_object_method(out_matrix,_jit_sym_getdata,&out_bp);
+        jit_object_method(out2_matrix,_jit_sym_getdata,&out2_bp);
+        
+		if (!out_bp || !out2_bp) { err=JIT_ERR_INVALID_OUTPUT; goto out;}
+        
+        //do the second matrix
+        float *out2_data = (float*)out2_bp;
+        for(int i=0; i<MAX_FLOCKS; i++){
+            out2_data[0] = flockPtr->boidCount[i];
+            out2_data+=1;
+        }
+        
 		
 		//get dimensions/planecount
 		dimcount   = out_minfo.dimcount;
 		planecount = out_minfo.planecount;
-        dimcount2   = out2_minfo.dimcount;
-        planecount2 = out2_minfo.planecount;
 		
 		for (i=0;i<dimcount;i++) {
 			dim[i] = out_minfo.dim[i];
 		}
         
-        for(i=0; i<dimcount2; i++){
-            dim2[i] = out2_minfo.dim[i];
-        }
-        
-        //do a step in the simulation
-        FlightStep(flockPtr);
-        
 		jit_boids3d_calculate_ndim(flockPtr, dimcount, dim, planecount, &out_minfo, out_bp);
-        jit_boids3d_calculate_ndim2(flockPtr, dimcount2, dim2, planecount2, &out2_minfo, out2_bp);
-        
 	} else {
 		return JIT_ERR_INVALID_PTR;
 	}
 	
-out:
+out: //output the matrix
 	jit_object_method(out_matrix,gensym("lock"),out_savelock);
-    jit_object_method(out2_matrix,gensym("lock"),out2_savelock);
 	return err;
-}
-
-void jit_boids3d_calculate_ndim2(t_jit_boids3d *flockPtr, long dimcount, long *dim, long planecount,
-                                t_jit_matrix_info *out_minfo, char *bop)
-{
-    float *fop;
-    fop = (float *)bop; //contains the planes
-    
-    for(int i=0; i<MAX_FLOCKS; i++){
-        fop[0] = flockPtr->boidCount[i];
-        fop+=planecount;
-    }
 }
 
 /*
@@ -544,6 +527,9 @@ void jit_boids3d_calculate_ndim(t_jit_boids3d *flockPtr, long dimcount, long *di
 	double 	tempNew_x, tempNew_y, tempNew_z;
 	double 	tempOld_x, tempOld_y, tempOld_z;
 	double	delta_x, delta_y, delta_z, azi, ele, speed;
+	
+    //do a step in the simulation
+	FlightStep(flockPtr);
 	
 	fop = (float *)bop; //contains the planes
 	
@@ -569,7 +555,7 @@ void jit_boids3d_calculate_ndim(t_jit_boids3d *flockPtr, long dimcount, long *di
             for (int i=0; i<MAX_FLOCKS; i++){
                 BoidPtr iterator = flockPtr->flockLL[i];
                 
-                  while (iterator){ //iterate thru the boids in the flock
+                while (iterator){ //iterate thru the boids in the flock
                     fop[0] = iterator->newPos[x];
                     fop[1] = iterator->newPos[y];
                     fop[2] = iterator->newPos[z];
@@ -588,7 +574,7 @@ void jit_boids3d_calculate_ndim(t_jit_boids3d *flockPtr, long dimcount, long *di
             for (int i=0; i<MAX_FLOCKS; i++){
                 BoidPtr iterator = flockPtr->flockLL[i];
                 
-                  while (iterator){ //iterate thru the boids in the flock
+                while (iterator){ //iterate thru the boids in the flock
                     tempNew_x = iterator->newPos[x];
                     tempNew_y = iterator->newPos[y];
                     tempNew_z = iterator->newPos[z];
@@ -745,16 +731,16 @@ void FlightStep(t_jit_boids3d *flockPtr)
             iterator = iterator->nextBoid;
             
         }
-         
+        
     }
 }
 
 /*
-    Calculates the center of a flock, saves it in flockPtr->centerPt. Also computes avoid and matching of neighbor velocities
+ Calculates the center of a flock, saves it in flockPtr->centerPt. Also computes avoid and matching of neighbor velocities
  
-    This is a method that is a combo of what was previously FindFlockCenter() and MatchAndAvoidNeighbors(), because both involve calculating the neighbors of a boid
+ This is a method that is a combo of what was previously FindFlockCenter() and MatchAndAvoidNeighbors(), because both involve calculating the neighbors of a boid
  
-    TODO: possible optimization = if we're only allowing boids from same flock, only calculate the center once for each flock
+ TODO: possible optimization = if we're only allowing boids from same flock, only calculate the center once for each flock
  */
 float CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, double *matchNeighborVel, double *avoidNeighborVel)
 {
@@ -867,7 +853,7 @@ float CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, do
 		avoidNeighborVel[z] = 0;
 	}
 	return(tempSpeed);
-
+    
 }
 
 
@@ -890,16 +876,16 @@ void AvoidWalls(t_jit_boids3d *flockPtr, BoidPtr theBoid, double *wallVel)
 {
 	double		testPoint[3];
     
-//	wallVel[x] = 0.0;
-//	wallVel[y] = 0.0;
-//	wallVel[z] = 0.0;
+    //	wallVel[x] = 0.0;
+    //	wallVel[y] = 0.0;
+    //	wallVel[z] = 0.0;
     
 	/* calculate test point in front of the nose of the boid */
 	/* distance depends on the boid's speed and the avoid edge constant */
 	testPoint[x] = theBoid->oldPos[x] + theBoid->newDir[x] * (theBoid->speed * (flockPtr->speed[theBoid->flockID] / 100.0));// * flockPtr->edgedist[flockPtr->boid[theBoid].flockID];
     testPoint[y] = theBoid->oldPos[y] + theBoid->newDir[y] * (theBoid->speed * (flockPtr->speed[theBoid->flockID] / 100.0));// * flockPtr->edgedist[flockPtr->boid[theBoid].flockID];
     testPoint[z] = theBoid->oldPos[z] + theBoid->newDir[z] * (theBoid->speed * (flockPtr->speed[theBoid->flockID] / 100.0));// * flockPtr->edgedist[flockPtr->boid[theBoid].flockID];
-
+    
     
 	/* if test point is out of the left (right) side of flockPtr->flyrect, */
 	/* return a positive (negative) horizontal velocity component */
@@ -1112,7 +1098,7 @@ void InitFlock(t_jit_boids3d *flockPtr)
 
 
 /*
-    Initializes a LL. Returns a pointer to its head
+ Initializes a LL. Returns a pointer to its head
  */
 BoidPtr InitLL(t_jit_boids3d *flockPtr, long numBoids, int flockID)
 {
@@ -1143,7 +1129,7 @@ BoidPtr InitLL(t_jit_boids3d *flockPtr, long numBoids, int flockID)
 
 
 /*
-    Allocates memory for a Boid struct and returns a pointer to it
+ Allocates memory for a Boid struct and returns a pointer to it
  */
 
 BoidPtr InitBoid(t_jit_boids3d *flockPtr)
@@ -1230,8 +1216,8 @@ t_jit_boids3d *jit_boids3d_new(void)
 }
 
 /*
-    Free the linked lists containing all the boids
-    NOTE: this replaces the previous method: jit_boids3d_free
+ Free the linked lists containing all the boids
+ NOTE: this replaces the previous method: jit_boids3d_free
  */
 void freeFlocks(t_jit_boids3d *flockPtr)
 {
@@ -1260,10 +1246,10 @@ void freeFlocks(t_jit_boids3d *flockPtr)
 
 
 /*
-void jit_boids3d_free(t_jit_boids3d *flockPtr)
-{
-	//free bytes allocated for boids struct
-	jit_freebytes((void *)flockPtr->boid, sizeof(Boid)*flockPtr->number);
-}
-*/
+ void jit_boids3d_free(t_jit_boids3d *flockPtr)
+ {
+ //free bytes allocated for boids struct
+ jit_freebytes((void *)flockPtr->boid, sizeof(Boid)*flockPtr->number);
+ }
+ */
 
