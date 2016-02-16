@@ -8,7 +8,6 @@
 Instructions for running the simulation can be found in the `ControlPanel...maxpat` file
 
 ####Future Work:
-- Rewrite inlets/outlets. Very confusing/ambiguous the way it is written now, would be nice to be able to have more than 1 outlet -- doing in this branch
 - Visually connect boids in same neighborhood (output a matrix from external with each boid and its neighbors) This will make neighborhoods / clusters more visually obvious   
 - Fix visual jump (Improve efficiency in message passing / handling of FlockIDs?)  
 - Movable / Multiple Attractors  
