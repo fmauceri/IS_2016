@@ -40,18 +40,18 @@ int C74_EXPORT main (void)
 
 void max_jit_boids3d_outputmatrix(t_max_jit_boids3d *x)
 {
-	t_atom a;
 	long outputmode=max_jit_mop_getoutputmode(x);
 	void *mop=max_jit_obex_adornment_get(x,_jit_sym_jit_mop);
 	t_jit_err err;
 	
 	if (outputmode&&mop) { //always output unless output mode is none
 		if (outputmode==1)  {
-			if (err=(t_jit_err)jit_object_method(
-                                                 max_jit_obex_jitob_get(x),
-                                                 _jit_sym_matrix_calc,
-                                                 jit_object_method(mop,_jit_sym_getinputlist),
-                                                 jit_object_method(mop,_jit_sym_getoutputlist)))
+            err=(t_jit_err)jit_object_method(max_jit_obex_jitob_get(x),
+                                             _jit_sym_matrix_calc,
+                                             jit_object_method(mop,_jit_sym_getinputlist),
+                                             jit_object_method(mop,_jit_sym_getoutputlist));
+			if (err)
+                      
 			{
 				jit_error_code(x,err);
 			} else {
@@ -73,8 +73,10 @@ void *max_jit_boids3d_new(t_symbol *s, long argc, t_atom *argv)
 	t_max_jit_boids3d *x;
 	void *o;
     
-	if (x=(t_max_jit_boids3d *)max_jit_obex_new(max_jit_boids3d_class,gensym("jit_boids3d"))) {
-		if (o=jit_object_new(gensym("jit_boids3d"))) {
+    x=(t_max_jit_boids3d *)max_jit_obex_new(max_jit_boids3d_class,gensym("jit_boids3d"));
+	if (x) {
+        o=jit_object_new(gensym("jit_boids3d"));
+		if (o) {
 			max_jit_mop_setup_simple(x,o,argc,argv);			
 			max_jit_attr_args(x,argc,argv);
 		} else {
