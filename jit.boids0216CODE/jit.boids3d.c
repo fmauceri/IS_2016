@@ -22,7 +22,7 @@
 #define         MAX_FLOCKS      6
 
 // initial flight parameters
-const int           kBoidMaxAge     = 100;
+const int           kBoidMaxAge     = 1000;
 const long			kNumBoids		= 0;	// number of boids for each flock
 const long			kNumNeighbors	= 2;	// must be <= kMaxNeighbors
 const double 		kMinSpeed		= 0.15;	// boids' minimum speed
@@ -104,6 +104,7 @@ typedef struct _jit_boids3d
 	double			inertia[MAX_FLOCKS];
 	double			accel[MAX_FLOCKS];
     double          neighborRadius[MAX_FLOCKS];
+    double          age[MAX_FLOCKS];
 	
     //XYZ for each flock
     
@@ -147,6 +148,7 @@ t_jit_err jit_boids3d_repel(t_jit_boids3d *flockPtr, void *attr, long argc, t_at
 t_jit_err jit_boids3d_edgedist(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv); //NOT USED
 t_jit_err jit_boids3d_speed(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
 t_jit_err jit_boids3d_accel(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
+t_jit_err jit_boids3d_age(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
 
 //Boids specific methods
 void InitFlock(t_jit_boids3d *flockPtr);
@@ -279,6 +281,12 @@ t_jit_err jit_boids3d_init(void)
 	attr = jit_object_new(_jit_sym_jit_attr_offset_array,"attractpt",_jit_sym_float64,4,attrflags,
                           (method)0L,(method)0L,calcoffset(t_jit_boids3d,attractPtCount),calcoffset(t_jit_boids3d,attractpt));
 	jit_class_addattr(_jit_boids3d_class,attr);
+    
+    //age
+    attr = jit_object_new(_jit_sym_jit_attr_offset_array,"age",_jit_sym_float64,2,attrflags,
+                          (method)0L,(method)jit_boids3d_age,calcoffset(t_jit_boids3d,speed));
+    jit_class_addattr(_jit_boids3d_class,attr);
+    
 	
 	jit_class_register(_jit_boids3d_class);
     
@@ -368,6 +376,12 @@ t_jit_err jit_boids3d_accel(t_jit_boids3d *flockPtr, void *attr, long argc, t_at
 {
     int flockID = (int)jit_atom_getfloat(argv+1);
 	flockPtr->accel[flockID] = (double)MAX(jit_atom_getfloat(argv), 0.000001);
+}
+
+t_jit_err jit_boids3d_age(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
+{
+    int flockID = (int)jit_atom_getfloat(argv+1);
+    flockPtr->age[flockID] = (double)MAX(jit_atom_getfloat(argv), 1);
 }
 
 /*
@@ -630,7 +644,7 @@ void FlightStep(t_jit_boids3d *flockPtr)
             
             //update age and check if it's this boid's time to die
             iterator->age++;
-            if(iterator->age > kBoidMaxAge){
+            if(iterator->age > flockPtr->age[iterator->flockID]){
                 
                 BoidPtr deletor = iterator;
                 
