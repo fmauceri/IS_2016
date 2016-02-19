@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 180.0, 79.0, 1300.0, 887.0 ],
+		"rect" : [ 112.0, 79.0, 1710.0, 887.0 ],
 		"bgcolor" : [ 0.847059, 0.854902, 0.870588, 1.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
@@ -2204,21 +2204,21 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 362.75, 250.5, 50.0, 22.0 ],
 									"style" : "",
-									"text" : "0."
+									"text" : "155."
 								}
 
 							}
 , 							{
 								"box" : 								{
 									"id" : "obj-14",
-									"linecount" : 4,
+									"linecount" : 5,
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 479.0, 154.0, 50.0, 62.0 ],
 									"style" : "",
-									"text" : "boidCount 0. 0. 0. 0. 0. 0."
+									"text" : "boidCount 10. 0. 80. 65. 0. 0."
 								}
 
 							}
@@ -2231,7 +2231,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 25.0, 558.5, 149.25, 22.0 ],
 									"style" : "",
-									"text" : "age 1000. 2."
+									"text" : "age 1000000. 3."
 								}
 
 							}
@@ -2258,7 +2258,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 325.0, 487.0, 53.0, 62.0 ],
 									"style" : "",
-									"text" : "number 0. 0. 0. 0. 0. 0. 0."
+									"text" : "number 0. 0. 0. 0. 0. 0. 155."
 								}
 
 							}
@@ -3643,7 +3643,7 @@
 ,
 					"style" : "",
 					"text" : "autopattr",
-					"varname" : "u464000828"
+					"varname" : "u970000584"
 				}
 
 			}
@@ -3835,7 +3835,7 @@
 					"numinlets" : 0,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 652.5, 497.166687, 44.0, 22.0 ],
+					"patching_rect" : [ 651.5, 497.166687, 44.0, 22.0 ],
 					"style" : "",
 					"text" : "r draw"
 				}
@@ -9542,7 +9542,7 @@
 					"id" : "obj-15",
 					"lockeddragscroll" : 0,
 					"maxclass" : "bpatcher",
-					"name" : "FlockParamUI_02-04.maxpat",
+					"name" : "FlockParamUI_02-16.maxpat",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
@@ -9566,7 +9566,7 @@
 					"id" : "obj-12",
 					"lockeddragscroll" : 0,
 					"maxclass" : "bpatcher",
-					"name" : "FlockParamUI_02-04.maxpat",
+					"name" : "FlockParamUI_02-16.maxpat",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
@@ -9590,7 +9590,7 @@
 					"id" : "obj-11",
 					"lockeddragscroll" : 0,
 					"maxclass" : "bpatcher",
-					"name" : "FlockParamUI_02-04.maxpat",
+					"name" : "FlockParamUI_02-16.maxpat",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
@@ -9614,7 +9614,7 @@
 					"id" : "obj-3",
 					"lockeddragscroll" : 0,
 					"maxclass" : "bpatcher",
-					"name" : "FlockParamUI_02-04.maxpat",
+					"name" : "FlockParamUI_02-16.maxpat",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
@@ -9638,7 +9638,7 @@
 					"id" : "obj-2",
 					"lockeddragscroll" : 0,
 					"maxclass" : "bpatcher",
-					"name" : "FlockParamUI_02-04.maxpat",
+					"name" : "FlockParamUI_02-16.maxpat",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
@@ -9662,7 +9662,7 @@
 					"id" : "obj-192",
 					"lockeddragscroll" : 0,
 					"maxclass" : "bpatcher",
-					"name" : "FlockParamUI_02-04.maxpat",
+					"name" : "FlockParamUI_02-16.maxpat",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
@@ -9733,7 +9733,6 @@
 						"tags" : "",
 						"style" : "",
 						"subpatcher_template" : "",
-						"visible" : 1,
 						"boxes" : [ 							{
 								"box" : 								{
 									"id" : "obj-7",
@@ -10441,7 +10440,7 @@
 				"box" : 				{
 					"id" : "obj-94",
 					"maxclass" : "newobj",
-					"numinlets" : 1,
+					"numinlets" : 2,
 					"numoutlets" : 0,
 					"patcher" : 					{
 						"fileversion" : 1,
@@ -10453,7 +10452,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 410.0, 95.0, 672.0, 573.0 ],
+						"rect" : [ 525.0, 93.0, 672.0, 573.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -10481,6 +10480,20 @@
 						"style" : "",
 						"subpatcher_template" : "",
 						"boxes" : [ 							{
+								"box" : 								{
+									"comment" : "",
+									"id" : "obj-3",
+									"maxclass" : "inlet",
+									"numinlets" : 0,
+									"numoutlets" : 1,
+									"outlettype" : [ "bang" ],
+									"patching_rect" : [ 62.0, 39.0, 30.0, 30.0 ],
+									"presentation_rect" : [ 62.0, 40.0, 0.0, 0.0 ],
+									"style" : ""
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"id" : "obj-7",
 									"maxclass" : "newobj",
@@ -10842,7 +10855,7 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "int" ],
-									"patching_rect" : [ 50.0, 40.0, 30.0, 30.0 ],
+									"patching_rect" : [ 20.0, 39.0, 30.0, 30.0 ],
 									"style" : ""
 								}
 
@@ -10920,6 +10933,15 @@
 									"disabled" : 0,
 									"hidden" : 0,
 									"source" : [ "obj-2", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-119", 0 ],
+									"disabled" : 0,
+									"hidden" : 0,
+									"source" : [ "obj-3", 0 ]
 								}
 
 							}
@@ -11054,7 +11076,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 758.0, 91.0, 1852.0, 887.0 ],
+						"rect" : [ 34.0, 91.0, 1852.0, 887.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -11186,7 +11208,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 325.0, 291.0, 50.0, 62.0 ],
 									"style" : "",
-									"text" : "jit_matrix u930000481"
+									"text" : "jit_matrix u394000483"
 								}
 
 							}
@@ -11213,7 +11235,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 189.0, 291.0, 50.0, 62.0 ],
 									"style" : "",
-									"text" : "jit_matrix u930000481"
+									"text" : "jit_matrix u394000483"
 								}
 
 							}
@@ -11240,7 +11262,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 66.75, 291.0, 50.0, 62.0 ],
 									"style" : "",
-									"text" : "jit_matrix u930000481"
+									"text" : "jit_matrix u394000483"
 								}
 
 							}
@@ -13000,7 +13022,7 @@
 					"mode" : 0,
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 11.0, 873.0, 933.0, 317.0 ],
+					"patching_rect" : [ 8.0, 873.0, 933.0, 317.0 ],
 					"proportion" : 0.39,
 					"style" : ""
 				}
@@ -13033,7 +13055,7 @@
 					"mode" : 0,
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 244.25, 294.0, 720.333252, 551.0 ],
+					"patching_rect" : [ 244.25, 290.791687, 720.333252, 551.0 ],
 					"proportion" : 0.39,
 					"style" : ""
 				}
@@ -13205,7 +13227,7 @@
 					"destination" : [ "obj-102", 0 ],
 					"disabled" : 0,
 					"hidden" : 0,
-					"source" : [ "obj-19", 1 ]
+					"source" : [ "obj-19", 0 ]
 				}
 
 			}
@@ -13446,7 +13468,7 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-19", 0 ],
+					"destination" : [ "obj-94", 1 ],
 					"disabled" : 0,
 					"hidden" : 0,
 					"source" : [ "obj-58", 0 ]
@@ -13666,15 +13688,15 @@
 		}
 ,
 		"dependency_cache" : [ 			{
-				"name" : "FlockParamUI_02-04.maxpat",
-				"bootpath" : "~/Desktop/IS_2016",
+				"name" : "FlockParamUI_02-16.maxpat",
+				"bootpath" : "~/Desktop/Git Repos/IS_2016",
 				"patcherrelativepath" : ".",
 				"type" : "JSON",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "paramPreset.json",
-				"bootpath" : "~/Desktop/IS_2016",
+				"bootpath" : "~/Desktop/Git Repos/IS_2016",
 				"patcherrelativepath" : ".",
 				"type" : "JSON",
 				"implicit" : 1
