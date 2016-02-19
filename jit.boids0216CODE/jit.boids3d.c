@@ -62,6 +62,19 @@ const double        kFlyRectScalingFactor = 10;
 #define				back		5
 
 /*
+    Struct for an attract pt
+ */
+typedef struct Attractor {
+    
+    int xLoc;
+    int yLoc;
+    int zLoc;
+    
+    int age; //??
+    
+} Attractor, *AttractorPtr;
+
+/*
     Struct for a boid object
         Boids are stored in LinkedLists by flock in the _jit_boids3d struct
  */
@@ -118,6 +131,7 @@ typedef struct _jit_boids3d
     double          tempCenterPt[3];
 	long			centerPtCount;
 	
+    
 	double			attractpt[3];
 	long			attractPtCount;
 	
@@ -177,7 +191,7 @@ int CalcNumBoids(t_jit_boids3d *flockPtr);
 t_jit_err jit_boids3d_init(void)
 {
     long attrflags=0;
-	t_jit_object *attr,*mop,*o, *o2; //o and o2 are the 2 outlets. Mop stands for a matrix in jitter
+	t_jit_object *attr,*mop,*o, *o2, *o3; //o and o2 are the 2 outlets. Mop stands for a matrix in jitter
 	t_symbol *atsym;
 	
 	atsym = gensym("jit_attr_offset");
@@ -187,11 +201,14 @@ t_jit_err jit_boids3d_init(void)
                                        sizeof(t_jit_boids3d),0L);
     
 	//add mop
-	mop = jit_object_new(_jit_sym_jit_mop,0,2); //object will have 0 inlets and 2 outlets
+	mop = jit_object_new(_jit_sym_jit_mop,0,3); //object will have 0 inlets and 2 outlets
 	o = jit_object_method(mop,_jit_sym_getoutput,1); //first outlet
     o2 = jit_object_method(mop,_jit_sym_getoutput,2); //second outlet
+    o3 = jit_object_method(mop,_jit_sym_getoutput,3); //second outlet
 	jit_attr_setlong(o,_jit_sym_dimlink,0);
     jit_attr_setlong(o2,_jit_sym_dimlink,0);
+    jit_attr_setlong(o3,_jit_sym_dimlink,0);
+
 	
 	jit_class_addadornment(_jit_boids3d_class,mop);
 	//add methods
@@ -475,21 +492,24 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
 {
     
 	t_jit_err err=JIT_ERR_NONE;
-	long out_savelock, out2_savelock; //if there is a problem, saves and locks the output matricies
-	t_jit_matrix_info out_minfo, out2_minfo;
-	char *out_bp, *out2_bp;
+	long out_savelock, out2_savelock, out3_savelock; //if there is a problem, saves and locks the output matricies
+	t_jit_matrix_info out_minfo, out2_minfo, out3_minfo;
+	char *out_bp, *out2_bp, *out3_bp;
 	long i,dimcount,planecount,dim[JIT_MATRIX_MAX_DIMCOUNT]; //dimensions and planes for the first output matrix
-	void *out_matrix, *out2_matrix;
+	void *out_matrix, *out2_matrix, *out3_matrix;
 	
 	out_matrix 	= jit_object_method(outputs,_jit_sym_getindex,0);
     out2_matrix 	= jit_object_method(outputs,_jit_sym_getindex,1);
+    out3_matrix     = jit_object_method(outputs, _jit_sym_getindex, 2);
     
-	if (flockPtr&&out_matrix&&out2_matrix) {
+	if (flockPtr&&out_matrix&&out2_matrix&&out3_matrix) {
 		out_savelock = (long) jit_object_method(out_matrix,_jit_sym_lock,1);
         out2_savelock = (long) jit_object_method(out2_matrix,_jit_sym_lock,1);
+        out3_savelock = (long) jit_object_method(out3_matrix, _jit_sym_lock,1);
 		
 		jit_object_method(out_matrix,_jit_sym_getinfo,&out_minfo); //assign the out_infos to their cooresponding out matrix
         jit_object_method(out2_matrix,_jit_sym_getinfo,&out2_minfo);
+        jit_object_method(out3_matrix,_jit_sym_getinfo, &out3_minfo);
 		
         int numBoids = CalcNumBoids(flockPtr);
         
@@ -502,8 +522,13 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
         out2_minfo.dim[0] = MAX_FLOCKS;
 		out2_minfo.dim[1] = 1;
 		out2_minfo.type = _jit_sym_float32; //outputting floating point numbers
-		
         out2_minfo.planecount = 1;
+        
+        //dimensions of attractor output matrix (number of attractors x 1)
+        out3_minfo.dim[0] = 1;
+        out3_minfo.dim[1] = 1;
+        out3_minfo.type = _jit_sym_float32; //outputting floating point numbers
+        out3_minfo.planecount = 3; //xyz
         
         //output the correct mode
 		switch(flockPtr->mode) { // newpos
@@ -524,11 +549,15 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
         
         jit_object_method(out2_matrix,_jit_sym_setinfo,&out2_minfo);
 		jit_object_method(out2_matrix,_jit_sym_getinfo,&out2_minfo);
+        
+        jit_object_method(out3_matrix,_jit_sym_setinfo,&out3_minfo);
+        jit_object_method(out3_matrix,_jit_sym_getinfo,&out3_minfo);
 		
 		jit_object_method(out_matrix,_jit_sym_getdata,&out_bp);
         jit_object_method(out2_matrix,_jit_sym_getdata,&out2_bp);
+        jit_object_method(out3_matrix,_jit_sym_getdata,&out3_bp);
         
-		if (!out_bp || !out2_bp) { err=JIT_ERR_INVALID_OUTPUT; goto out;}
+        if (!out_bp || !out2_bp || !out3_bp) { err=JIT_ERR_INVALID_OUTPUT; goto out;}
         
         //populate the second outlet matrix with data
         float *out2_data = (float*)out2_bp;
@@ -537,13 +566,21 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
             out2_data+=1;
         }
         
-		
-		//get dimensions/planecount
-		dimcount   = out_minfo.dimcount;
-		planecount = out_minfo.planecount;
-		
-		for (i=0;i<dimcount;i++) {
-			dim[i] = out_minfo.dim[i];
+        //populate the 3rd outlet with data
+        float *out3_data = (float*)out3_bp;
+        //for (int i = 0; i < flockPtr->attractPtCount; i++){
+            out3_data[0] = flockPtr->attractpt[x];
+            out3_data[1] = flockPtr->attractpt[y];
+            out3_data[2] = flockPtr->attractpt[z];
+            out3_data += 3; //planecount
+        //}
+        
+        //get dimensions/planecount
+        dimcount   = out_minfo.dimcount;
+        planecount = out_minfo.planecount;
+        
+        for (i=0;i<dimcount;i++) {
+            dim[i] = out_minfo.dim[i];
 		}
         
         //populate the first outlet matrix with data
@@ -1243,7 +1280,7 @@ t_jit_boids3d *jit_boids3d_new(void)
 	if ((flockPtr=(t_jit_boids3d *)jit_object_alloc(_jit_boids3d_class))) {
 		
 		flockPtr->flyRectCount		= 6;
-		flockPtr->attractPtCount	= 3;
+		flockPtr->attractPtCount	= 1;
 		flockPtr->mode	 			= 0;
 		
 		//init boids params
