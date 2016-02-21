@@ -309,7 +309,7 @@ t_jit_err jit_boids3d_init(void)
 	jit_class_addattr(_jit_boids3d_class,attr);
     
     //age
-    attr = jit_object_new(_jit_sym_jit_attr_offset_array,"age",_jit_sym_float64,2,attrflags,
+    attr = jit_object_new(_jit_sym_jit_attr_offset_array,"age",_jit_sym_long,2,attrflags,
                           (method)0L,(method)jit_boids3d_age,calcoffset(t_jit_boids3d,speed));
     jit_class_addattr(_jit_boids3d_class,attr);
     
@@ -419,8 +419,8 @@ t_jit_err jit_boids3d_accel(t_jit_boids3d *flockPtr, void *attr, long argc, t_at
 
 t_jit_err jit_boids3d_age(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
-    int flockID = (int)jit_atom_getfloat(argv+1);
-    flockPtr->age[flockID] = (double)MAX(jit_atom_getfloat(argv), 1);
+    int flockID = (int)jit_atom_getlong(argv+1);
+    flockPtr->age[flockID] = (double)jit_atom_getlong(argv);
     return JIT_ERR_NONE;
 }
 
@@ -709,7 +709,7 @@ void FlightStep(t_jit_boids3d *flockPtr)
             
             //update age and check if it's this boid's time to die
             iterator->age++;
-            if(iterator->age > flockPtr->age[iterator->flockID]){
+            if(iterator->age > flockPtr->age[iterator->flockID] && flockPtr->age[iterator->flockID] > 0){
                 
                 BoidPtr deletor = iterator;
                 

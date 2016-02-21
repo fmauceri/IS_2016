@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 300.0, 697.0, 748.0, 37.0 ],
+		"rect" : [ 184.0, 693.0, 798.0, 41.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 1,
 		"default_fontsize" : 12.0,
@@ -44,7 +44,7 @@
 					"numoutlets" : 3,
 					"outlettype" : [ "", "", "" ],
 					"patching_rect" : [ 697.5, 646.0, 88.0, 22.0 ],
-					"restore" : [ 0.0 ],
+					"restore" : [ 0 ],
 					"saved_object_attributes" : 					{
 						"parameter_enable" : 0
 					}
@@ -70,10 +70,9 @@
 			}
 , 			{
 				"box" : 				{
-					"format" : 6,
 					"id" : "obj-15",
-					"maxclass" : "flonum",
-					"minimum" : 0.0,
+					"maxclass" : "number",
+					"minimum" : -1,
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "bang" ],
