@@ -10,7 +10,6 @@ Instructions for running the simulation can be found in the `ControlPanel...maxp
 ####Future Work:
 - Visually connect boids in same neighborhood (output a matrix from external with each boid and its neighbors) This will make neighborhoods / clusters more visually obvious   
 - Fix visual jump (Improve efficiency in message passing / handling of FlockIDs?)  
-- Movable / Multiple Attractors  
-- Implement the deletion of boids (age?)  
+- Movable / Multiple Attractors (in progress)
 - Revisit the statistics used to characterize flock behavior  
 - Stipulate where boids are born in space when they are added
