@@ -3,13 +3,13 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 7,
-			"minor" : 1,
-			"revision" : 0,
+			"minor" : 0,
+			"revision" : 3,
 			"architecture" : "x86",
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 55.0, 79.0, 1332.0, 762.0 ],
+		"rect" : [ 194.0, 79.0, 1332.0, 762.0 ],
 		"bgcolor" : [ 0.847059, 0.854902, 0.870588, 1.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
@@ -203,8 +203,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 7,
-							"minor" : 1,
-							"revision" : 0,
+							"minor" : 0,
+							"revision" : 3,
 							"architecture" : "x86",
 							"modernui" : 1
 						}
@@ -464,7 +464,7 @@
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 850.333313, 609.0, 50.0, 22.0 ],
 					"style" : "",
-					"text" : "1021."
+					"text" : "0."
 				}
 
 			}
@@ -479,8 +479,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 7,
-							"minor" : 1,
-							"revision" : 0,
+							"minor" : 0,
+							"revision" : 3,
 							"architecture" : "x86",
 							"modernui" : 1
 						}
@@ -1524,8 +1524,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 7,
-							"minor" : 1,
-							"revision" : 0,
+							"minor" : 0,
+							"revision" : 3,
 							"architecture" : "x86",
 							"modernui" : 1
 						}
@@ -1896,8 +1896,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 7,
-							"minor" : 1,
-							"revision" : 0,
+							"minor" : 0,
+							"revision" : 3,
 							"architecture" : "x86",
 							"modernui" : 1
 						}
@@ -2006,8 +2006,8 @@
 										"fileversion" : 1,
 										"appversion" : 										{
 											"major" : 7,
-											"minor" : 1,
-											"revision" : 0,
+											"minor" : 0,
+											"revision" : 3,
 											"architecture" : "x86",
 											"modernui" : 1
 										}
@@ -2199,8 +2199,8 @@
 										"fileversion" : 1,
 										"appversion" : 										{
 											"major" : 7,
-											"minor" : 1,
-											"revision" : 0,
+											"minor" : 0,
+											"revision" : 3,
 											"architecture" : "x86",
 											"modernui" : 1
 										}
@@ -2392,8 +2392,8 @@
 										"fileversion" : 1,
 										"appversion" : 										{
 											"major" : 7,
-											"minor" : 1,
-											"revision" : 0,
+											"minor" : 0,
+											"revision" : 3,
 											"architecture" : "x86",
 											"modernui" : 1
 										}
@@ -3039,8 +3039,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 7,
-							"minor" : 1,
-							"revision" : 0,
+							"minor" : 0,
+							"revision" : 3,
 							"architecture" : "x86",
 							"modernui" : 1
 						}
@@ -3170,21 +3170,21 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 362.75, 250.5, 50.0, 22.0 ],
 									"style" : "",
-									"text" : "1021."
+									"text" : "0."
 								}
 
 							}
 , 							{
 								"box" : 								{
 									"id" : "obj-14",
-									"linecount" : 5,
+									"linecount" : 3,
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 479.0, 154.0, 62.0, 76.0 ],
 									"style" : "",
-									"text" : "boidCount 304. 397. 80. 80. 80. 80."
+									"text" : "boidCount 0. 0. 0. 0. 0. 0."
 								}
 
 							}
@@ -3198,7 +3198,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 59.75, 506.0, 55.0, 62.0 ],
 									"style" : "",
-									"text" : "number 0. 0. 0. 0. 0. 0. 1021."
+									"text" : "number 0. 0. 0. 0. 0. 0. 0."
 								}
 
 							}
@@ -4128,7 +4128,7 @@
 ,
 					"style" : "",
 					"text" : "autopattr",
-					"varname" : "u242000953"
+					"varname" : "u595000853"
 				}
 
 			}
@@ -4434,8 +4434,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 7,
-							"minor" : 1,
-							"revision" : 0,
+							"minor" : 0,
+							"revision" : 3,
 							"architecture" : "x86",
 							"modernui" : 1
 						}
@@ -4775,8 +4775,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 7,
-							"minor" : 1,
-							"revision" : 0,
+							"minor" : 0,
+							"revision" : 3,
 							"architecture" : "x86",
 							"modernui" : 1
 						}
@@ -4819,8 +4819,8 @@
 										"fileversion" : 1,
 										"appversion" : 										{
 											"major" : 7,
-											"minor" : 1,
-											"revision" : 0,
+											"minor" : 0,
+											"revision" : 3,
 											"architecture" : "x86",
 											"modernui" : 1
 										}
@@ -5510,8 +5510,8 @@
 										"fileversion" : 1,
 										"appversion" : 										{
 											"major" : 7,
-											"minor" : 1,
-											"revision" : 0,
+											"minor" : 0,
+											"revision" : 3,
 											"architecture" : "x86",
 											"modernui" : 1
 										}
@@ -6403,8 +6403,8 @@
 										"fileversion" : 1,
 										"appversion" : 										{
 											"major" : 7,
-											"minor" : 1,
-											"revision" : 0,
+											"minor" : 0,
+											"revision" : 3,
 											"architecture" : "x86",
 											"modernui" : 1
 										}
@@ -7094,8 +7094,8 @@
 										"fileversion" : 1,
 										"appversion" : 										{
 											"major" : 7,
-											"minor" : 1,
-											"revision" : 0,
+											"minor" : 0,
+											"revision" : 3,
 											"architecture" : "x86",
 											"modernui" : 1
 										}
@@ -7785,8 +7785,8 @@
 										"fileversion" : 1,
 										"appversion" : 										{
 											"major" : 7,
-											"minor" : 1,
-											"revision" : 0,
+											"minor" : 0,
+											"revision" : 3,
 											"architecture" : "x86",
 											"modernui" : 1
 										}
@@ -8476,8 +8476,8 @@
 										"fileversion" : 1,
 										"appversion" : 										{
 											"major" : 7,
-											"minor" : 1,
-											"revision" : 0,
+											"minor" : 0,
+											"revision" : 3,
 											"architecture" : "x86",
 											"modernui" : 1
 										}
@@ -9729,8 +9729,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 7,
-							"minor" : 1,
-							"revision" : 0,
+							"minor" : 0,
+							"revision" : 3,
 							"architecture" : "x86",
 							"modernui" : 1
 						}
@@ -10188,13 +10188,13 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 7,
-							"minor" : 1,
-							"revision" : 0,
+							"minor" : 0,
+							"revision" : 3,
 							"architecture" : "x86",
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 903.0, 241.0, 870.0, 843.0 ],
+						"rect" : [ 696.0, 241.0, 870.0, 843.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -11048,8 +11048,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 7,
-							"minor" : 1,
-							"revision" : 0,
+							"minor" : 0,
+							"revision" : 3,
 							"architecture" : "x86",
 							"modernui" : 1
 						}
@@ -11238,8 +11238,8 @@
 										"fileversion" : 1,
 										"appversion" : 										{
 											"major" : 7,
-											"minor" : 1,
-											"revision" : 0,
+											"minor" : 0,
+											"revision" : 3,
 											"architecture" : "x86",
 											"modernui" : 1
 										}
@@ -11727,8 +11727,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 7,
-							"minor" : 1,
-							"revision" : 0,
+							"minor" : 0,
+							"revision" : 3,
 							"architecture" : "x86",
 							"modernui" : 1
 						}
@@ -12496,8 +12496,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 7,
-							"minor" : 1,
-							"revision" : 0,
+							"minor" : 0,
+							"revision" : 3,
 							"architecture" : "x86",
 							"modernui" : 1
 						}
@@ -13426,13 +13426,15 @@
 ,
 		"dependency_cache" : [ 			{
 				"name" : "FlockParamUI_02-16.maxpat",
-				"bootpath" : "~/Desktop/IS_2016-master",
+				"bootpath" : "~/Desktop/IS_2016",
+				"patcherrelativepath" : ".",
 				"type" : "JSON",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "paramPreset.json",
-				"bootpath" : "~/Desktop/IS_2016-master",
+				"bootpath" : "~/Desktop/IS_2016",
+				"patcherrelativepath" : ".",
 				"type" : "JSON",
 				"implicit" : 1
 			}
@@ -13441,7 +13443,7 @@
 				"type" : "iLaX"
 			}
  ],
-		"autosave" : 0
+		"embedsnapshot" : 0
 	}
 
 }

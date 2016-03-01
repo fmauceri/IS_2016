@@ -549,7 +549,7 @@ t_jit_err jit_boids3d_accel(t_jit_boids3d *flockPtr, void *attr, long argc, t_at
 t_jit_err jit_boids3d_age(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
     int flockID = (int)jit_atom_getfloat(argv+1);
-    flockPtr->age[flockID] = (double)MAX(jit_atom_getfloat(argv), 1);
+    flockPtr->age[flockID] = (double)jit_atom_getfloat(argv);
     return JIT_ERR_NONE;
 }
 
@@ -856,7 +856,7 @@ void FlightStep(t_jit_boids3d *flockPtr)
             
             //update age and check if it's this boid's time to die
             iterator->age++;
-            if(iterator->age > flockPtr->age[iterator->flockID]){
+            if(iterator->age > flockPtr->age[iterator->flockID] && flockPtr->age[iterator->flockID] != -1){
                 
                 BoidPtr deletor = iterator;
                 
@@ -1114,14 +1114,15 @@ void SeekAttractors(t_jit_boids3d *flockPtr, BoidPtr theBoid, double* seekDir)
         
         iterator = iterator->nextAttractor;
     }
-    NormalizeVelocity(closestDir);
     
     //update seekDir
     if(closestDist != DBL_MAX){
-        seekDir[0] = closestDir[0];
-        seekDir[1] = closestDir[1];
-        seekDir[2] = closestDir[2];
+        seekDir[0] = closestDir[0] - theBoid->oldPos[0];
+        seekDir[1] = closestDir[1] - theBoid->oldPos[1];
+        seekDir[2] = closestDir[2] - theBoid->oldPos[2];
     }
+    
+    NormalizeVelocity(seekDir);
 }
 
 
