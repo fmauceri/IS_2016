@@ -113,7 +113,7 @@ typedef struct _jit_boids3d
 	
     //Parameters for each flock
     int             boidCount[MAX_FLOCKS];
-    int             flockID[MAX_FLOCKS];
+    int             flockID[MAX_FLOCKS]; //?
 	double 			minspeed[MAX_FLOCKS];
 	double			maxspeed[MAX_FLOCKS];
 	double			center[MAX_FLOCKS];
@@ -614,6 +614,7 @@ t_jit_err jit_boids3d_number(t_jit_boids3d *flockPtr, void *attr, long argc, t_a
             }
         }
     }
+    
     return 0;
 }
 
@@ -658,7 +659,7 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
         out2_minfo.planecount = 1;
         
         //dimensions of attractor output matrix (number of attractors x 1)
-        out3_minfo.dim[0] = 1;
+        out3_minfo.dim[0] = flockPtr->numAttractors;
         out3_minfo.dim[1] = 1;
         out3_minfo.type = _jit_sym_float32; //outputting floating point numbers
         out3_minfo.planecount = 4; //xyz, id
