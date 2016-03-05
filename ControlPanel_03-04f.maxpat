@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 170.0, 79.0, 1310.0, 887.0 ],
+		"rect" : [ 433.0, 97.0, 1310.0, 711.0 ],
 		"bgcolor" : [ 0.847059, 0.854902, 0.870588, 1.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
@@ -7748,7 +7748,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 434.0, -888.0, 640.0, 480.0 ],
+						"rect" : [ 761.0, 79.0, 879.0, 601.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -7776,6 +7776,95 @@
 						"style" : "",
 						"subpatcher_template" : "",
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-19",
+									"linecount" : 3,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 301.0, 434.0, 150.0, 47.0 ],
+									"style" : "",
+									"text" : "Stipulate where boids are born in space when they are added \n"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-17",
+									"linecount" : 10,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 298.0, 273.0, 156.0, 141.0 ],
+									"style" : "",
+									"text" : "Visually connect boids in same neighborhood (output a matrix from external with each boid and its neighbors) This will make neighborhoods / clusters more visually obvious -> output matrix with endpoints of line and flock ID"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-15",
+									"linecount" : 4,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 298.0, 198.0, 150.0, 60.0 ],
+									"style" : "",
+									"text" : "Revisit / Document parameters controlling boid flight -> Look at doc from summer\n"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-13",
+									"linecount" : 2,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 298.0, 143.0, 150.0, 33.0 ],
+									"style" : "",
+									"text" : "Find interesting boid behavior"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-10",
+									"linecount" : 2,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 294.0, 79.0, 150.0, 33.0 ],
+									"style" : "",
+									"text" : "Attraction level based on attractors, not the boids"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-8",
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 294.0, 26.5, 150.0, 20.0 ],
+									"style" : "",
+									"text" : "GRACE AND JACK"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-6",
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 94.0, 26.5, 150.0, 20.0 ],
+									"style" : "",
+									"text" : "FRANKS STUFF"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"id" : "obj-3",
 									"linecount" : 3,
@@ -11658,7 +11747,7 @@
 ,
 					"style" : "",
 					"text" : "autopattr",
-					"varname" : "u446000969"
+					"varname" : "u253000965"
 				}
 
 			}
@@ -20333,7 +20422,7 @@
 					"mode" : 0,
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 260.25, 286.791687, 720.333252, 551.0 ],
+					"patching_rect" : [ 259.25, 286.791687, 720.333252, 551.0 ],
 					"proportion" : 0.39,
 					"style" : ""
 				}
