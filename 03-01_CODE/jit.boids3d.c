@@ -931,7 +931,6 @@ void FlightStep(t_jit_boids3d *flockPtr)
              flockPtr->avoid[flockID] * avoidNeighborVel[z]) / flockPtr->inertia[flockID];
             NormalizeVelocity(iterator->newDir);	// normalize velocity so its length is unified
             
-            
             // set to avoidNeighborSpeed bounded by minspeed and maxspeed
             if ((avoidNeighborSpeed >= flockPtr->minspeed[flockID]) &&
                 (avoidNeighborSpeed <= flockPtr->maxspeed[flockID]))
@@ -1423,9 +1422,9 @@ BoidPtr InitBoid(t_jit_boids3d *flockPtr)
     
     theBoid->speed = 0.0;
     
-    theBoid->newPos[x] = theBoid->oldPos[x] = RandomInt(flockPtr->flyrect[right],flockPtr->flyrect[left]);		// set random location within flyrect
-    theBoid->newPos[y] = theBoid->oldPos[y] = RandomInt(flockPtr->flyrect[bottom], flockPtr->flyrect[top]);
-    theBoid->newPos[z] = theBoid->oldPos[z] = RandomInt(flockPtr->flyrect[back], flockPtr->flyrect[front]);
+    theBoid->newPos[x] = theBoid->oldPos[x] = (kFlyRectScalingFactor*RandomInt(flockPtr->flyrect[right],flockPtr->flyrect[left]));		// set random location within flyrect
+    theBoid->newPos[y] = theBoid->oldPos[y] = (kFlyRectScalingFactor*RandomInt(flockPtr->flyrect[bottom], flockPtr->flyrect[top]));
+    theBoid->newPos[z] = theBoid->oldPos[z] = (kFlyRectScalingFactor*RandomInt(flockPtr->flyrect[back], flockPtr->flyrect[front]));
     double rndAngle = RandomInt(0, 360) * flockPtr->d2r;		// set velocity from random angle
     theBoid->newDir[x] = jit_math_sin(rndAngle);
     theBoid->newDir[y] = jit_math_cos(rndAngle);
