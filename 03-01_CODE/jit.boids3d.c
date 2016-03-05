@@ -895,18 +895,6 @@ void FlightStep(t_jit_boids3d *flockPtr)
             
             float avoidNeighborSpeed = CalcFlockCenterAndNeighborVel(flockPtr, iterator, matchNeighborVel,  avoidNeighborVel);
             
-            if (flockPtr->neighbors == 0) {							// get all velocity components
-                matchNeighborVel[x] = zeroVel[x];
-                matchNeighborVel[y] = zeroVel[y];
-                matchNeighborVel[z] = zeroVel[z];
-                
-                avoidNeighborVel[x] = zeroVel[x];
-                avoidNeighborVel[y] = zeroVel[y];
-                avoidNeighborVel[z] = zeroVel[z];
-                
-                avoidNeighborSpeed = 0;
-            }
-            
             //update velocity to include centering and attracting instincts
             SeekPoint(flockPtr, iterator, flockPtr->tempCenterPt, goCenterVel);
             
@@ -970,14 +958,16 @@ float CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, do
     int flockID = theBoid->flockID;
     double totalH = 0, totalV = 0, totalD = 0;
     
-    //Variables for matching / avoidance
-    Boid            neighbor;
-	double			dist, distH, distV,distD;
-	double			tempSpeed;
-	short			numClose = 0;
-	double			totalVel[3] = {0.0,0.0,0.0};
-    Boid neighborList[kMaxNeighbors];
+    //Matching
+    matchNeighborVel[x] = 0;
+    matchNeighborVel[y] = 0;
+    matchNeighborVel[z] = 0;
+    
+    //Variables for avoidance
+    double	avoidSpeed = theBoid->speed;
     int neighborsCount = 0; //counter to keep track of how many neighbors we've found
+    
+    float PreferredDistance = 0.1;
     
     for(int i=0; i<MAX_FLOCKS; i++){ //grab every boid
         
@@ -1002,8 +992,20 @@ float CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, do
                 totalV += theBoid->oldPos[y];
                 totalD += theBoid->oldPos[z];
                 
-                //matching / avoidance
-                neighborList[neighborsCount] = *iterator;
+                //matching
+                matchNeighborVel[x] += iterator->oldDir[x];
+                matchNeighborVel[y] += iterator->oldDir[y];
+                matchNeighborVel[z] += iterator->oldDir[z];
+                
+                //
+                
+                if (InFront((theBoid), iterator)) {	// adjust speed
+                    avoidSpeed /= (flockPtr->accel[flockID] / 100.0);
+                }
+                else {
+                    avoidSpeed *= (flockPtr->accel[flockID] / 100.0);
+                }
+    
                 neighborsCount++;
             }
             
@@ -1012,8 +1014,10 @@ float CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, do
         }
     }
     
-    //update the center point as an average of theBoid's neighbors
+    //normalize the matching velocity
+    NormalizeVelocity(matchNeighborVel);
     
+    //update the center point as an average of theBoid's neighbors
     if(neighborsCount > 0){ //get the average position of all boids in the flock
         flockPtr->tempCenterPt[x] = (double)	(totalH / neighborsCount);
         flockPtr->tempCenterPt[y] = (double)	(totalV / neighborsCount);
@@ -1024,58 +1028,7 @@ float CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, do
         flockPtr->tempCenterPt[z] = theBoid->oldPos[z];
     }
     
-    matchNeighborVel[x] = 0;
-	matchNeighborVel[y] = 0;
-	matchNeighborVel[z] = 0;
-	
-	// set tempSpeed to old speed
-	tempSpeed = theBoid->speed;
-	
-	for (int i = 0; i < neighborsCount; i++) {
-		neighbor = neighborList[i];
-		
-		// calculate matchNeighborVel by averaging the neighbor velocities
-		matchNeighborVel[x] += neighbor.oldDir[x];
-		matchNeighborVel[y] += neighbor.oldDir[y];
-		matchNeighborVel[z] += neighbor.oldDir[z];
-        
-        distH = neighbor.oldPos[x] - theBoid->oldPos[x];
-        distV = neighbor.oldPos[y] - theBoid->oldPos[y];
-        distD = neighbor.oldPos[z] - theBoid->oldPos[z];
-        
-        if(dist == 0.0) dist = 0.0000001;
-        
-        /*  This can be used to give the boids a preferred distance from their neighbors
-         totalVel[x] = totalVel[x] - distH - (distH * ((float) flockPtr->neighborRadius[flockID] / (dist)));
-         totalVel[y] = totalVel[y] - distV - (distV * ((float) flockPtr->neighborRadius[flockID] / (dist)));
-         totalVel[z] = totalVel[z] - distD - (distV * ((float) flockPtr->neighborRadius[flockID] / (dist)));
-         */
-        
-        numClose++;
-		
-		
-		if (InFront((theBoid), &(neighbor))) {	// adjust speed
-            tempSpeed /= (flockPtr->accel[flockID] / 100.0);
-		}
-		else {
-            tempSpeed *= (flockPtr->accel[flockID] / 100.0);
-		}
-	}
-    
-    //calculate resultant velocity
-	if (numClose) {
-		avoidNeighborVel[x] = totalVel[x] / numClose;
-		avoidNeighborVel[y] = totalVel[y] / numClose;
-		avoidNeighborVel[z] = totalVel[z] / numClose;
-		NormalizeVelocity(matchNeighborVel);
-	}
-	else {
-		avoidNeighborVel[x] = 0;
-		avoidNeighborVel[y] = 0;
-		avoidNeighborVel[z] = 0;
-	}
-	return(tempSpeed);
-    
+    return avoidSpeed;
 }
 
 
