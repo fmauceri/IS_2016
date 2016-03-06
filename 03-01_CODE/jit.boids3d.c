@@ -327,7 +327,7 @@ t_jit_err jit_boids3d_init(void)
     jit_class_addattr(_jit_boids3d_class,attr);
     
     //add attractor
-    attr = jit_object_new(_jit_sym_jit_attr_offset_array,"addattractor",_jit_sym_long,1,attrflags,
+    attr = jit_object_new(_jit_sym_jit_attr_offset_array,"addattractor",_jit_sym_long,2,attrflags,
                           (method)0L,(method)jit_boids3d_addattractor,calcoffset(t_jit_boids3d,numAttractors));
     jit_class_addattr(_jit_boids3d_class,attr);
     
@@ -382,6 +382,9 @@ t_jit_err jit_boids3d_attractpt(t_jit_boids3d *flockPtr, void *attr, long argc, 
  */
 t_jit_err jit_boids3d_addattractor(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
+    //grab the ID of the new attractor
+    int newID = (int)jit_atom_getlong(argv);
+    
     //initialize an attractor
     AttractorPtr iterator = flockPtr->attractorLL;
     AttractorPtr newAttractor = InitAttractor(flockPtr);
@@ -389,14 +392,34 @@ t_jit_err jit_boids3d_addattractor(t_jit_boids3d *flockPtr, void *attr, long arg
     
     //no attractors exist
     if(!iterator){
-        newAttractor->id = 0;
+        newAttractor->id = newID;
         flockPtr->attractorLL = newAttractor;
         flockPtr->attractorLL->nextAttractor = NULL;
         return JIT_ERR_NONE;
     }
     
-    //at least one attractor already exists, add to front
-    newAttractor->id = iterator->id+1;
+    //at least one attractor already exists
+    //check if there already exists an attractor with newID
+    int idAlreadyExists = 0;
+    int maxID = 0;
+    while(iterator){
+        if(iterator->id > maxID){
+            maxID = iterator->id;
+        }
+        if(iterator->id == newID){
+            idAlreadyExists = 1;
+            break;
+        }
+        iterator = iterator->nextAttractor;
+    }
+    iterator = flockPtr->attractorLL;
+    
+    //add to front
+    if(idAlreadyExists == 0){
+        newAttractor->id = newID;
+    }else{
+        newAttractor->id = maxID+1;
+    }
     newAttractor->nextAttractor = iterator;
     flockPtr->attractorLL = newAttractor;
     return JIT_ERR_NONE;
