@@ -132,6 +132,9 @@ typedef struct _jit_boids3d
     
     double          tempCenterPt[3];
 	long			centerPtCount;
+    
+    //stipulates where boids are born in space when they are added (DEFAULT = {0, 0, 0,})
+    double          birthLoc[3];
 	
     BoidPtr         flockLL[MAX_FLOCKS]; //array holding 6 linked lists of the flocks
     AttractorPtr    attractorLL; //linked list for attractors
@@ -177,6 +180,7 @@ t_jit_err jit_boids3d_age(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom
 t_jit_err jit_boids3d_attractpt(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
 t_jit_err jit_boids3d_addattractor(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
 t_jit_err jit_boids3d_deleteattractor(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
+t_jit_err jit_boids3d_birthloc(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
 
 
 //Initialization methods
@@ -334,6 +338,11 @@ t_jit_err jit_boids3d_init(void)
     //add attractor
     attr = jit_object_new(_jit_sym_jit_attr_offset_array,"deleteattractor",_jit_sym_long,2,attrflags,
                           (method)0L,(method)jit_boids3d_deleteattractor,calcoffset(t_jit_boids3d,numAttractors));
+    jit_class_addattr(_jit_boids3d_class,attr);
+    
+    //birthpt
+    attr = jit_object_new(_jit_sym_jit_attr_offset_array,"birthloc",_jit_sym_float64, 4, attrflags,
+                          (method)0L,(method)jit_boids3d_birthloc,calcoffset(t_jit_boids3d,birthLoc));
     jit_class_addattr(_jit_boids3d_class,attr);
     
 	
@@ -573,6 +582,22 @@ t_jit_err jit_boids3d_age(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom
 {
     int flockID = (int)jit_atom_getfloat(argv+1);
     flockPtr->age[flockID] = (double)jit_atom_getfloat(argv);
+    return JIT_ERR_NONE;
+}
+
+/*
+ Updates the position of the birth location
+ Inputs:
+ argv+0/1/2 = x/y/z of the new birth location
+ */
+t_jit_err jit_boids3d_birthloc(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv){
+    
+    post("NEW POS: %f, %f, %f", (double)jit_atom_getfloat(argv), (double)jit_atom_getfloat(argv+1), (double)jit_atom_getfloat(argv+2));
+    
+    flockPtr->birthLoc[x] = (double)jit_atom_getfloat(argv);
+    flockPtr->birthLoc[y] = (double)jit_atom_getfloat(argv+1);
+    flockPtr->birthLoc[z] = (double)jit_atom_getfloat(argv+2);
+
     return JIT_ERR_NONE;
 }
 
@@ -1307,6 +1332,10 @@ void InitFlock(t_jit_boids3d *flockPtr)
     flockPtr->numAttractors = 0;
     flockPtr->allowNeighborsFromDiffFlock = 1;
     
+    //set the initial birth location to the origin
+    flockPtr->birthLoc[x] = 0.0;
+    flockPtr->birthLoc[y] = 0.0;
+    flockPtr->birthLoc[z] = 0.0;
     
     //Flock specific initialization
     for(int i=0; i<MAX_FLOCKS; i++){
@@ -1398,9 +1427,15 @@ BoidPtr InitBoid(t_jit_boids3d *flockPtr)
     
     theBoid->speed = 0.0;
     
-    theBoid->newPos[x] = theBoid->oldPos[x] = (kFlyRectScalingFactor*RandomInt(flockPtr->flyrect[right],flockPtr->flyrect[left]));		// set random location within flyrect
-    theBoid->newPos[y] = theBoid->oldPos[y] = (kFlyRectScalingFactor*RandomInt(flockPtr->flyrect[bottom], flockPtr->flyrect[top]));
-    theBoid->newPos[z] = theBoid->oldPos[z] = (kFlyRectScalingFactor*RandomInt(flockPtr->flyrect[back], flockPtr->flyrect[front]));
+//    theBoid->newPos[x] = theBoid->oldPos[x] = (kFlyRectScalingFactor*RandomInt(flockPtr->flyrect[right],flockPtr->flyrect[left]));		// set random location within flyrect
+//    theBoid->newPos[y] = theBoid->oldPos[y] = (kFlyRectScalingFactor*RandomInt(flockPtr->flyrect[bottom], flockPtr->flyrect[top]));
+//    theBoid->newPos[z] = theBoid->oldPos[z] = (kFlyRectScalingFactor*RandomInt(flockPtr->flyrect[back], flockPtr->flyrect[front]));
+    
+    //set the boids position to be birthLoc
+    theBoid->newPos[x] = theBoid->oldPos[x] = flockPtr->birthLoc[x];
+    theBoid->newPos[y] = theBoid->oldPos[y] = flockPtr->birthLoc[y];
+    theBoid->newPos[z] = theBoid->oldPos[z] = flockPtr->birthLoc[z];
+    
     double rndAngle = RandomInt(0, 360) * flockPtr->d2r;		// set velocity from random angle
     theBoid->newDir[x] = jit_math_sin(rndAngle);
     theBoid->newDir[y] = jit_math_cos(rndAngle);
