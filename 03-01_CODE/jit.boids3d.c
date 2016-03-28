@@ -17,6 +17,7 @@
 #define			kAssistOutlet	2
 #define			kMaxLong		0xFFFFFFFF
 #define			kMaxNeighbors	200
+#define         kMaxNumBoids    1000
 
 //Maximum number of flocks allowed in the simulation
 #define         MAX_FLOCKS      6
@@ -96,6 +97,18 @@ typedef struct Boid {
 } Boid, *BoidPtr;
 
 /*
+    Struct for a line between 2 boids
+    Stored in an array to be output in the 4th outlet
+ */
+typedef struct NeighborLine {
+    
+    float       boidA[3];
+    float       boidB[3];
+    int         flockID;
+    
+} NeighborLine, *NeighborLinePtr;
+
+/*
     Struct for the actual jitter object
  */
 typedef struct _jit_boids3d
@@ -135,6 +148,9 @@ typedef struct _jit_boids3d
     
     //stipulates where boids are born in space when they are added (DEFAULT = {0, 0, 0,})
     double          birthLoc[3];
+    
+    //array to hold the lines between neighbors
+    NeighborLinePtr neighborhoodConnections[(kMaxNumBoids * (kMaxNumBoids-1))/2];
 	
     BoidPtr         flockLL[MAX_FLOCKS]; //array holding 6 linked lists of the flocks
     AttractorPtr    attractorLL; //linked list for attractors
@@ -618,13 +634,15 @@ t_jit_err jit_boids3d_number(t_jit_boids3d *flockPtr, void *attr, long argc, t_a
     
     //make sure the number of boids in at least one flock is being changed
     int changed = 0;
+    int totalChanges = 0;
     for(int i=0; i<6; i++){
         if (boidChanges[i] != 0){
+            totalChanges += boidChanges[i];
             changed = 1;
             break;
         }
     }
-    if(changed == 0){
+    if(changed == 0 || totalChanges+CalcNumBoids(flockPtr)>kMaxNumBoids){
         return NULL;
     }
     
@@ -674,24 +692,27 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
 {
     
 	t_jit_err err=JIT_ERR_NONE;
-	long out_savelock, out2_savelock, out3_savelock; //if there is a problem, saves and locks the output matricies
-	t_jit_matrix_info out_minfo, out2_minfo, out3_minfo;
-	char *out_bp, *out2_bp, *out3_bp;
+	long out_savelock, out2_savelock, out3_savelock, out4_savelock; //if there is a problem, saves and locks the output matricies
+	t_jit_matrix_info out_minfo, out2_minfo, out3_minfo, out4_minfo;
+	char *out_bp, *out2_bp, *out3_bp, *out4_bp;
 	long i,dimcount,planecount,dim[JIT_MATRIX_MAX_DIMCOUNT]; //dimensions and planes for the first output matrix
-	void *out_matrix, *out2_matrix, *out3_matrix;
+	void *out_matrix, *out2_matrix, *out3_matrix, *out4_matrix;
 	
 	out_matrix 	= jit_object_method(outputs,_jit_sym_getindex,0);
     out2_matrix 	= jit_object_method(outputs,_jit_sym_getindex,1);
     out3_matrix     = jit_object_method(outputs, _jit_sym_getindex, 2);
+    out4_matrix     = jit_object_method(outputs, _jit_sym_getindex, 3);
     
 	if (flockPtr&&out_matrix&&out2_matrix&&out3_matrix) {
 		out_savelock = (long) jit_object_method(out_matrix,_jit_sym_lock,1);
         out2_savelock = (long) jit_object_method(out2_matrix,_jit_sym_lock,1);
         out3_savelock = (long) jit_object_method(out3_matrix, _jit_sym_lock,1);
+        out4_savelock = (long) jit_object_method(out4_matrix, _jit_sym_lock,1);
 		
 		jit_object_method(out_matrix,_jit_sym_getinfo,&out_minfo); //assign the out_infos to their cooresponding out matrix
         jit_object_method(out2_matrix,_jit_sym_getinfo,&out2_minfo);
         jit_object_method(out3_matrix,_jit_sym_getinfo, &out3_minfo);
+        jit_object_method(out4_matrix,_jit_sym_getinfo, &out4_minfo);
 		
         int numBoids = CalcNumBoids(flockPtr);
         
@@ -711,6 +732,12 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
         out3_minfo.dim[1] = 1;
         out3_minfo.type = _jit_sym_float32; //outputting floating point numbers
         out3_minfo.planecount = 4; //xyz, id
+        
+        //dimensions of the neighborhood line connecting matrix
+        out4_minfo.dim[0] = 3;
+        out4_minfo.dim[1] = (kMaxNumBoids * (kMaxNumBoids-1))/2.0;
+        out4_minfo.type = _jit_sym_float32;
+        out4_minfo.planecount = 1;
         
         //output the correct mode
 		switch(flockPtr->mode) { // newpos
@@ -734,13 +761,17 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
         
         jit_object_method(out3_matrix,_jit_sym_setinfo,&out3_minfo);
         jit_object_method(out3_matrix,_jit_sym_getinfo,&out3_minfo);
+        
+        jit_object_method(out4_matrix,_jit_sym_setinfo,&out4_minfo);
+        jit_object_method(out4_matrix,_jit_sym_getinfo,&out4_minfo);
 		
 		jit_object_method(out_matrix,_jit_sym_getdata,&out_bp);
         jit_object_method(out2_matrix,_jit_sym_getdata,&out2_bp);
         jit_object_method(out3_matrix,_jit_sym_getdata,&out3_bp);
+        jit_object_method(out4_matrix,_jit_sym_getdata,&out4_bp);
         
         //something went wrong, handle the error
-        if (!out_bp || !out2_bp || !out3_bp) {
+        if (!out_bp || !out2_bp || !out3_bp || !out4_bp) {
             err=JIT_ERR_INVALID_OUTPUT;
             goto out;
         }
@@ -765,6 +796,8 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
             
             iterator=iterator->nextAttractor;
         }
+        
+        //populate the 4th outlet with data
         
         //get dimensions/planecount
         dimcount   = out_minfo.dimcount;
@@ -1033,6 +1066,8 @@ float CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, do
                 }
                 
                 //this boid is a neighbor
+                
+                //TODO: populate neighborhoodLines here
                 
                 //centering
                 neighborsCount++;
