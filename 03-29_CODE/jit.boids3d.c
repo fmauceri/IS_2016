@@ -593,8 +593,6 @@ t_jit_err jit_boids3d_age(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom
  */
 t_jit_err jit_boids3d_birthloc(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv){
     
-    post("NEW POS: %f, %f, %f", (double)jit_atom_getfloat(argv), (double)jit_atom_getfloat(argv+1), (double)jit_atom_getfloat(argv+2));
-    
     flockPtr->birthLoc[x] = (double)jit_atom_getfloat(argv);
     flockPtr->birthLoc[y] = (double)jit_atom_getfloat(argv+1);
     flockPtr->birthLoc[z] = (double)jit_atom_getfloat(argv+2);
