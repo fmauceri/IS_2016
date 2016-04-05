@@ -77,6 +77,8 @@ typedef struct Attractor {
 /*
     Struct for a boid object
         Boids are stored in LinkedLists by flock in the _jit_boids3d struct
+ 
+    TODO: add some sort of ID
  */
 typedef struct Boid {
     
@@ -149,6 +151,7 @@ typedef struct _jit_boids3d
     
     //array to hold the lines between neighbors
     NeighborLinePtr neighborhoodConnections[(kMaxNumBoids * (kMaxNumBoids-1))/2];
+    long            sizeOfNeighborhoodConnections;
 	
     BoidPtr         flockLL[MAX_FLOCKS]; //array holding 6 linked lists of the flocks
     AttractorPtr    attractorLL; //linked list for attractors
@@ -201,6 +204,7 @@ void InitFlock(t_jit_boids3d *flockPtr);
 BoidPtr InitLL(t_jit_boids3d *flockPtr, long numBoids, int flockID); //void Flock_donumBoids(t_jit_boids3d *flockPtr, long numBoids);
 BoidPtr InitBoid(t_jit_boids3d *flockPtr);
 AttractorPtr InitAttractor(t_jit_boids3d *flockPtr);
+NeighborLinePtr InitNeighborhoodLine(t_jit_boids3d *flockPtr, BoidPtr theBoid, BoidPtr theOtherBoid, int id);
 
 //Methods for running the simulation
 void FlightStep(t_jit_boids3d *flockPtr);
@@ -675,11 +679,11 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
 {
     
 	t_jit_err err=JIT_ERR_NONE;
-    long out_savelock, out2_savelock, out3_savelock;// out4_savelock; //if there is a problem, saves and locks the output matricies
+    long out_savelock, out2_savelock, out3_savelock;//, out4_savelock; //if there is a problem, saves and locks the output matricies
     t_jit_matrix_info out_minfo, out2_minfo, out3_minfo;//, out4_minfo;
     char *out_bp, *out2_bp, *out3_bp;//, *out4_bp;
 	long i,dimcount,planecount,dim[JIT_MATRIX_MAX_DIMCOUNT]; //dimensions and planes for the first output matrix
-    void *out_matrix, *out2_matrix, *out3_matrix;//*out4_matrix;
+    void *out_matrix, *out2_matrix, *out3_matrix;//, *out4_matrix;
 	
 	out_matrix 	= jit_object_method(outputs,_jit_sym_getindex,0);
     out2_matrix 	= jit_object_method(outputs,_jit_sym_getindex,1);
@@ -1035,9 +1039,15 @@ void CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, dou
     double	avoidSpeed = theBoid->speed;
     int neighborsCount = 0; //counter to keep track of how many neighbors we've found
     
+    //Initialize Neighborhood Connections
+    flockPtr->sizeOfNeighborhoodConnections = 0;
+    
+    
     for(int i=0; i<MAX_FLOCKS; i++){ //grab every boid
         
         BoidPtr iterator = flockPtr->flockLL[i];
+        
+        int startAddingBoidLines = 0;
         
         while(iterator){
             
@@ -1078,8 +1088,26 @@ void CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, dou
                 else {
                     avoidSpeed *= (flockPtr->accel[flockID] / 100.0);
                 }
+                
+                //Check if a line needs to be drawn between these boids
+                if(startAddingBoidLines == 1){
+                    NeighborLinePtr newLine = InitNeighborhoodLine(flockPtr, theBoid, iterator, theBoid->flockID);
+                    if(!newLine){
+                        post("ERROR: Failed to allocate a line");
+                        continue;
+                    }
+                    
+                    //add the new line to the array
+                    flockPtr->neighborhoodConnections[flockPtr->sizeOfNeighborhoodConnections] = newLine;
+                    flockPtr->sizeOfNeighborhoodConnections++;
+                    
+                }
     
                 neighborsCount++;
+                
+            }else if(dist == 0.0 && iterator->flockID == theBoid->flockID){
+                //When the boid sees itself, it should draw lines to all the boids remaining in the LL if they are close enough
+                startAddingBoidLines = 1;
             }
             
             
@@ -1415,6 +1443,31 @@ BoidPtr InitLL(t_jit_boids3d *flockPtr, long numBoids, int flockID)
     }
     
     return head;
+}
+
+/*
+ 
+ */
+NeighborLinePtr InitNeighborhoodLine(t_jit_boids3d *flockPtr, BoidPtr theBoid, BoidPtr theOtherBoid, int id)
+{
+    struct NeighborLine * theLine = (struct NeighborLine *)malloc(sizeof(struct NeighborLine));
+    
+    if(!theLine){
+        return NULL;
+    }
+    
+    //Initialize components of the struct
+    theLine->boidA[x] = theBoid->newPos[x];
+    theLine->boidA[y] = theBoid->newPos[y];
+    theLine->boidA[z] = theBoid->newPos[z];
+    
+    theLine->boidB[x] = theOtherBoid->newPos[x];
+    theLine->boidB[y] = theOtherBoid->newPos[y];
+    theLine->boidB[z] = theOtherBoid->newPos[z];
+    
+    theLine->flockID = id;
+    
+    return theLine;
 }
 
 
