@@ -39,6 +39,36 @@
 		"subpatcher_template" : "",
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-172",
+					"linecount" : 2,
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 224.0, 174.0, 150.0, 33.0 ],
+					"presentation" : 1,
+					"presentation_linecount" : 2,
+					"presentation_rect" : [ 164.5, 151.236465, 90.0, 33.0 ],
+					"style" : "",
+					"text" : "one time step\n(for debugging)"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-170",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 76.0, 169.0, 150.0, 20.0 ],
+					"presentation" : 1,
+					"presentation_rect" : [ 78.75, 153.236465, 76.0, 20.0 ],
+					"style" : "",
+					"text" : "continuously"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-168",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
@@ -4748,7 +4778,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 532.0, 251.5, 60.0, 22.0 ],
 													"style" : "",
-													"text" : "0. 3.7 0."
+													"text" : "2. -4. -2."
 												}
 
 											}
@@ -5632,7 +5662,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 238.5, 196.0, 55.0, 22.0 ],
 													"style" : "",
-													"text" : "0."
+													"text" : "-2."
 												}
 
 											}
@@ -5658,7 +5688,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 179.5, 196.0, 53.0, 22.0 ],
 													"style" : "",
-													"text" : "3.7"
+													"text" : "-4."
 												}
 
 											}
@@ -5684,7 +5714,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 123.5, 196.0, 76.0, 22.0 ],
 													"style" : "",
-													"text" : "0."
+													"text" : "2."
 												}
 
 											}
@@ -5711,7 +5741,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 53.0, 189.0, 50.0, 62.0 ],
 													"style" : "",
-													"text" : "jit_matrix u637000359"
+													"text" : "jit_matrix u260000360"
 												}
 
 											}
@@ -6356,14 +6386,14 @@
 , 							{
 								"box" : 								{
 									"id" : "obj-76",
-									"linecount" : 2,
+									"linecount" : 3,
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 539.0, 541.5, 50.0, 49.0 ],
 									"style" : "",
-									"text" : "torus 0.3 0.1"
+									"text" : "glcolor 1. 0.5 0.5"
 								}
 
 							}
@@ -8250,7 +8280,7 @@
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 850.333313, 609.0, 50.0, 22.0 ],
 					"style" : "",
-					"text" : "46."
+					"text" : "0."
 				}
 
 			}
@@ -10944,21 +10974,21 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 362.75, 250.5, 50.0, 22.0 ],
 									"style" : "",
-									"text" : "46."
+									"text" : "0."
 								}
 
 							}
 , 							{
 								"box" : 								{
 									"id" : "obj-14",
-									"linecount" : 4,
+									"linecount" : 3,
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 479.0, 154.0, 62.0, 62.0 ],
 									"style" : "",
-									"text" : "boidCount 15. 11. 0. 20. 0. 0."
+									"text" : "boidCount 0. 0. 0. 0. 0. 0."
 								}
 
 							}
@@ -10972,7 +11002,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 59.75, 506.0, 55.0, 62.0 ],
 									"style" : "",
-									"text" : "number 0. 1. 0. 0. 0. 0. 46."
+									"text" : "number 0. 0. 0. 0. 0. 0. 0."
 								}
 
 							}
@@ -11904,7 +11934,7 @@
 ,
 					"style" : "",
 					"text" : "autopattr",
-					"varname" : "u011000958"
+					"varname" : "u297000716"
 				}
 
 			}
@@ -17463,7 +17493,7 @@
 					"outlettype" : [ "bang" ],
 					"patching_rect" : [ 270.0, 328.0, 28.0, 28.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 478.0, 153.236465, 28.0, 28.0 ],
+					"presentation_rect" : [ 179.0, 91.166748, 61.0, 61.0 ],
 					"style" : ""
 				}
 
@@ -17794,7 +17824,7 @@
 					"id" : "obj-15",
 					"lockeddragscroll" : 0,
 					"maxclass" : "bpatcher",
-					"name" : "FlockParamUI_04-02.maxpat",
+					"name" : "FlockParamUI_04-07.maxpat",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
@@ -17818,7 +17848,7 @@
 					"id" : "obj-12",
 					"lockeddragscroll" : 0,
 					"maxclass" : "bpatcher",
-					"name" : "FlockParamUI_04-02.maxpat",
+					"name" : "FlockParamUI_04-07.maxpat",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
@@ -17842,7 +17872,7 @@
 					"id" : "obj-11",
 					"lockeddragscroll" : 0,
 					"maxclass" : "bpatcher",
-					"name" : "FlockParamUI_04-02.maxpat",
+					"name" : "FlockParamUI_04-07.maxpat",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
@@ -17866,7 +17896,7 @@
 					"id" : "obj-3",
 					"lockeddragscroll" : 0,
 					"maxclass" : "bpatcher",
-					"name" : "FlockParamUI_04-02.maxpat",
+					"name" : "FlockParamUI_04-07.maxpat",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
@@ -17890,7 +17920,7 @@
 					"id" : "obj-2",
 					"lockeddragscroll" : 0,
 					"maxclass" : "bpatcher",
-					"name" : "FlockParamUI_04-02.maxpat",
+					"name" : "FlockParamUI_04-07.maxpat",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
@@ -17914,7 +17944,7 @@
 					"id" : "obj-192",
 					"lockeddragscroll" : 0,
 					"maxclass" : "bpatcher",
-					"name" : "FlockParamUI_04-02.maxpat",
+					"name" : "FlockParamUI_04-07.maxpat",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
@@ -18844,6 +18874,7 @@
 						"tags" : "",
 						"style" : "",
 						"subpatcher_template" : "",
+						"visible" : 1,
 						"boxes" : [ 							{
 								"box" : 								{
 									"id" : "obj-13",
@@ -21420,7 +21451,7 @@
 		}
 ,
 		"dependency_cache" : [ 			{
-				"name" : "FlockParamUI_04-02.maxpat",
+				"name" : "FlockParamUI_04-07.maxpat",
 				"bootpath" : "~/Desktop/IS_2016",
 				"patcherrelativepath" : ".",
 				"type" : "JSON",

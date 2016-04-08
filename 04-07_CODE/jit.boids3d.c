@@ -620,23 +620,22 @@ t_jit_err jit_boids3d_birthloc(t_jit_boids3d *flockPtr, void *attr, long argc, t
  */
 t_jit_err jit_boids3d_number(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
-    int boidChanges[6]; //number of boids being deleted from each flock
+    int boidChanges[MAX_FLOCKS]; //number of boids being deleted from each flock
     
     int newNumBoids; //new total number of boids across all flocks
     newNumBoids = jit_atom_getlong(argv+6);
     
-    for (int i=0; i<6; i++){
+    for (int i=0; i<MAX_FLOCKS; i++){
         boidChanges[i] = (int)jit_atom_getlong(argv+i); //new total boids for the ith flock
     }
     
     //make sure the number of boids in at least one flock is being changed
     int changed = 0;
     int totalChanges = 0;
-    for(int i=0; i<6; i++){
+    for(int i=0; i<MAX_FLOCKS; i++){
         if (boidChanges[i] != 0){
             totalChanges += boidChanges[i];
             changed = 1;
-            break;
         }
     }
     if(changed == 0 || totalChanges+CalcNumBoids(flockPtr)>kMaxNumBoids){
@@ -668,11 +667,12 @@ t_jit_err jit_boids3d_number(t_jit_boids3d *flockPtr, void *attr, long argc, t_a
                 //initialize a new boid and add it to the front of the LL
                 BoidPtr newBoid = InitBoid(flockPtr);
                 if(!newBoid){
-                    exit(1);
+                    return NULL;
                 }
                 newBoid->nextBoid = flockPtr->flockLL[i];
                 flockPtr->flockLL[i] = newBoid;
                 newBoid->flockID = i;
+                
                 flockPtr->boidCount[i]++; //update the number of boids in flock
             }
         }
@@ -720,6 +720,9 @@ t_jit_err jit_boids3d_stats(t_jit_boids3d *flockPtr, void *attr, long argc, t_at
  */
 t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *outputs)
 {
+    
+    //do a step in the simulation
+    FlightStep(flockPtr);
     
 	t_jit_err err=JIT_ERR_NONE;
     long out_savelock, out2_savelock, out3_savelock;//, out4_savelock; //if there is a problem, saves and locks the output matricies
@@ -856,13 +859,11 @@ out: //output the matrix
 void jit_boids3d_calculate_ndim(t_jit_boids3d *flockPtr, long dimcount, long *dim, long planecount,
                                 t_jit_matrix_info *out_minfo, char *bop)
 {
+    
 	float *fop;
 	double 	tempNew_x, tempNew_y, tempNew_z;
 	double 	tempOld_x, tempOld_y, tempOld_z;
 	double	delta_x, delta_y, delta_z, azi, ele, speed;
-	
-    //do a step in the simulation
-	FlightStep(flockPtr);
 	
 	fop = (float *)bop; //contains the data
 	
@@ -1438,6 +1439,9 @@ void InitFlock(t_jit_boids3d *flockPtr)
         //create the linked list
         BoidPtr newLL = InitLL(flockPtr, kNumBoids, i);
         //TODO: error checking here breaks the external
+        if(!newLL){
+            return NULL;
+        }
         
         flockPtr->flockLL[i] = newLL; //add LL to the array
         
@@ -1453,6 +1457,7 @@ void InitFlock(t_jit_boids3d *flockPtr)
         flockPtr->inertia[i]			= kInertiaFactor;
         flockPtr->accel[i]              = kAccelFactor;
         flockPtr->neighborRadius[i]     = kNRadius;
+        flockPtr->boidCount[i] = 0;
     }
 }
 
@@ -1468,7 +1473,7 @@ BoidPtr InitLL(t_jit_boids3d *flockPtr, long numBoids, int flockID)
         BoidPtr theBoid = InitBoid(flockPtr); //make a new boid
         if(!theBoid){
             printf("ERROR: failed to malloc a boid\n");
-            exit(1);
+            return;
         }
         
         //Add the boid to the LL or make it the head (if nothing has already been added)
@@ -1481,6 +1486,7 @@ BoidPtr InitLL(t_jit_boids3d *flockPtr, long numBoids, int flockID)
         }
         
         //update number of boids in the flock
+        
         flockPtr->boidCount[flockID]++;
         
     }
