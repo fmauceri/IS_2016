@@ -230,7 +230,7 @@ int CalcNumBoids(t_jit_boids3d *flockPtr);
 t_jit_err jit_boids3d_init(void)
 {
     long attrflags=0;
-	t_jit_object *attr,*mop,*o, *o2, *o3; //o, o2, and o3 are the 3 outlets. Mop stands for a matrix in jitter
+	t_jit_object *attr,*mop,*o, *o2, *o3, *o4; //o, o2, and o3 are the 3 outlets. Mop stands for a matrix in jitter
 	t_symbol *atsym;
 	
 	atsym = gensym("jit_attr_offset");
@@ -240,13 +240,15 @@ t_jit_err jit_boids3d_init(void)
                                        sizeof(t_jit_boids3d),0L);
     
 	//add mop
-	mop = jit_object_new(_jit_sym_jit_mop,0,3); //object will have 0 inlets and 3 outlets
+	mop = jit_object_new(_jit_sym_jit_mop,0,4); //object will have 0 inlets and 3 outlets
 	o = jit_object_method(mop,_jit_sym_getoutput,1); //first outlet
     o2 = jit_object_method(mop,_jit_sym_getoutput,2); //second outlet
-    o3 = jit_object_method(mop,_jit_sym_getoutput,3); //second outlet
+    o3 = jit_object_method(mop,_jit_sym_getoutput,3); //third outlet
+    o4 = jit_object_method(mop,_jit_sym_getoutput,4); //fourth outlet
 	jit_attr_setlong(o,_jit_sym_dimlink,0);
     jit_attr_setlong(o2,_jit_sym_dimlink,0);
     jit_attr_setlong(o3,_jit_sym_dimlink,0);
+    jit_attr_setlong(o4,_jit_sym_dimlink,0);
 
 	
 	jit_class_addadornment(_jit_boids3d_class,mop);
@@ -725,27 +727,27 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
     FlightStep(flockPtr);
     
 	t_jit_err err=JIT_ERR_NONE;
-    long out_savelock, out2_savelock, out3_savelock;//, out4_savelock; //if there is a problem, saves and locks the output matricies
-    t_jit_matrix_info out_minfo, out2_minfo, out3_minfo;//, out4_minfo;
-    char *out_bp, *out2_bp, *out3_bp;//, *out4_bp;
+    long out_savelock, out2_savelock, out3_savelock, out4_savelock; //if there is a problem, saves and locks the output matricies
+    t_jit_matrix_info out_minfo, out2_minfo, out3_minfo, out4_minfo;
+    char *out_bp, *out2_bp, *out3_bp, *out4_bp;
 	long i,dimcount,planecount,dim[JIT_MATRIX_MAX_DIMCOUNT]; //dimensions and planes for the first output matrix
-    void *out_matrix, *out2_matrix, *out3_matrix;//, *out4_matrix;
+    void *out_matrix, *out2_matrix, *out3_matrix, *out4_matrix;
 	
 	out_matrix 	= jit_object_method(outputs,_jit_sym_getindex,0);
     out2_matrix 	= jit_object_method(outputs,_jit_sym_getindex,1);
     out3_matrix     = jit_object_method(outputs, _jit_sym_getindex, 2);
-    //out4_matrix     = jit_object_method(outputs, _jit_sym_getindex, 3);
+    out4_matrix     = jit_object_method(outputs, _jit_sym_getindex, 3);
     
 	if (flockPtr&&out_matrix&&out2_matrix&&out3_matrix) {
 		out_savelock = (long) jit_object_method(out_matrix,_jit_sym_lock,1);
         out2_savelock = (long) jit_object_method(out2_matrix,_jit_sym_lock,1);
         out3_savelock = (long) jit_object_method(out3_matrix, _jit_sym_lock,1);
-        //out4_savelock = (long) jit_object_method(out4_matrix, _jit_sym_lock,1);
+        out4_savelock = (long) jit_object_method(out4_matrix, _jit_sym_lock,1);
 		
 		jit_object_method(out_matrix,_jit_sym_getinfo,&out_minfo); //assign the out_infos to their cooresponding out matrix
         jit_object_method(out2_matrix,_jit_sym_getinfo,&out2_minfo);
         jit_object_method(out3_matrix,_jit_sym_getinfo, &out3_minfo);
-        //jit_object_method(out4_matrix,_jit_sym_getinfo, &out4_minfo);
+        jit_object_method(out4_matrix,_jit_sym_getinfo, &out4_minfo);
 		
         int numBoids = CalcNumBoids(flockPtr);
         
@@ -767,10 +769,12 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
         out3_minfo.planecount = 4; //xyz, id
         
         //dimensions of the neighborhood line connecting matrix
-//        out4_minfo.dim[0] = 3;
-//        out4_minfo.dim[1] = (kMaxNumBoids * (kMaxNumBoids-1))/2.0;
-//        out4_minfo.type = _jit_sym_float32;
-//        out4_minfo.planecount = 1;
+        out4_minfo.dim[0] = (kMaxNumBoids * (kMaxNumBoids-1))/2.0;
+        out4_minfo.dim[1] = 1;
+        out4_minfo.type = _jit_sym_float32;
+        out4_minfo.planecount = 7;
+        
+        post("DIM: %d", out4_minfo.dim[0]);
         
         //output the correct mode
 		switch(flockPtr->mode) { // newpos
@@ -795,16 +799,16 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
         jit_object_method(out3_matrix,_jit_sym_setinfo,&out3_minfo);
         jit_object_method(out3_matrix,_jit_sym_getinfo,&out3_minfo);
         
-//        jit_object_method(out4_matrix,_jit_sym_setinfo,&out4_minfo);
-//        jit_object_method(out4_matrix,_jit_sym_getinfo,&out4_minfo);
+        jit_object_method(out4_matrix,_jit_sym_setinfo,&out4_minfo);
+        jit_object_method(out4_matrix,_jit_sym_getinfo,&out4_minfo);
 		
 		jit_object_method(out_matrix,_jit_sym_getdata,&out_bp);
         jit_object_method(out2_matrix,_jit_sym_getdata,&out2_bp);
         jit_object_method(out3_matrix,_jit_sym_getdata,&out3_bp);
-        //jit_object_method(out4_matrix,_jit_sym_getdata,&out4_bp);
+        jit_object_method(out4_matrix,_jit_sym_getdata,&out4_bp);
         
         //something went wrong, handle the error
-        if (!out_bp || !out2_bp || !out3_bp){// || !out4_bp) {
+        if (!out_bp || !out2_bp || !out3_bp || !out4_bp) {
             err=JIT_ERR_INVALID_OUTPUT;
             goto out;
         }
@@ -831,6 +835,38 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
         }
         
         //populate the 4th outlet with data
+        float *out4_data = (float*)out4_bp;
+        int tempCount = flockPtr->sizeOfNeighborhoodConnections;
+        post("TEMPCOUNT = %d", tempCount);
+        
+        for(int i=0; i<(kMaxNumBoids * (kMaxNumBoids-1))/2; i++){
+            
+            if(tempCount > 0){
+                out4_data[0] = flockPtr->neighborhoodConnections[i]->boidA[x];
+                out4_data[1] = flockPtr->neighborhoodConnections[i]->boidA[y];
+                out4_data[2] = flockPtr->neighborhoodConnections[i]->boidA[z];
+                
+                out4_data[3] = flockPtr->neighborhoodConnections[i]->boidB[x];
+                out4_data[4] = flockPtr->neighborhoodConnections[i]->boidB[y];
+                out4_data[5] = flockPtr->neighborhoodConnections[i]->boidB[z];
+                
+                out4_data[6] = flockPtr->neighborhoodConnections[i]->flockID;
+            }else{
+                out4_data[0] = -1.0;
+                out4_data[1] = -1.0;
+                out4_data[2] = -1.0;
+                
+                out4_data[3] = -1.0;
+                out4_data[4] = -1.0;
+                out4_data[5] = -1.0;
+                
+                out4_data[6] = -1.0;
+            }
+            tempCount--;
+            out4_data += 7; //planecount
+        }
+        
+        
         
         //get dimensions/planecount
         dimcount   = out_minfo.dimcount;
@@ -959,6 +995,9 @@ void FlightStep(t_jit_boids3d *flockPtr)
     double			matchNeighborVel[3] = {0,0,0};
     double			separationNeighborVel[3] = {0,0,0};
     
+    //Initialize the lines
+    flockPtr->sizeOfNeighborhoodConnections = 0;
+    
     //get every boid from every flock
     for (int i=0; i<MAX_FLOCKS; i++){
         BoidPtr iterator = flockPtr->flockLL[i];
@@ -1083,10 +1122,6 @@ void CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, dou
     double	avoidSpeed = theBoid->speed;
     int neighborsCount = 0; //counter to keep track of how many neighbors we've found
     
-    //Initialize Neighborhood Connections
-    flockPtr->sizeOfNeighborhoodConnections = 0;
-    
-    
     for(int i=0; i<MAX_FLOCKS; i++){ //grab every boid
         
         BoidPtr iterator = flockPtr->flockLL[i];
@@ -1143,6 +1178,7 @@ void CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, dou
                     
                     //add the new line to the array
                     flockPtr->neighborhoodConnections[flockPtr->sizeOfNeighborhoodConnections] = newLine;
+                    post("NEIGHBORHOOD CONNECTIONS = %d", flockPtr->sizeOfNeighborhoodConnections);
                     flockPtr->sizeOfNeighborhoodConnections++;
                     
                 }
@@ -1427,6 +1463,7 @@ void InitFlock(t_jit_boids3d *flockPtr)
     flockPtr->attractorLL = NULL;
     flockPtr->numAttractors = 0;
     flockPtr->allowNeighborsFromDiffFlock = 1;
+    flockPtr->sizeOfNeighborhoodConnections = 0;
     
     //set the initial birth location to the origin
     flockPtr->birthLoc[x] = 0.0;
