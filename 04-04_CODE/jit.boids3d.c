@@ -155,6 +155,8 @@ typedef struct _jit_boids3d
 	
     BoidPtr         flockLL[MAX_FLOCKS]; //array holding 6 linked lists of the flocks
     AttractorPtr    attractorLL; //linked list for attractors
+    
+    int tempForStats[1];
 	
 	double 			d2r;
 	double			r2d;
@@ -197,6 +199,9 @@ t_jit_err jit_boids3d_attractpt(t_jit_boids3d *flockPtr, void *attr, long argc, 
 t_jit_err jit_boids3d_addattractor(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
 t_jit_err jit_boids3d_deleteattractor(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
 t_jit_err jit_boids3d_birthloc(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
+
+//posts various stats to the console for debugging purposes
+t_jit_err jit_boids3d_stats(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
 
 
 //Initialization methods
@@ -355,6 +360,11 @@ t_jit_err jit_boids3d_init(void)
     //birthpt
     attr = jit_object_new(_jit_sym_jit_attr_offset_array,"birthloc",_jit_sym_float64, 4, attrflags,
                           (method)0L,(method)jit_boids3d_birthloc,calcoffset(t_jit_boids3d,birthLoc));
+    jit_class_addattr(_jit_boids3d_class,attr);
+    
+    //stats
+    attr = jit_object_new(_jit_sym_jit_attr_offset_array,"stats",_jit_sym_float64, 0, attrflags,
+                          (method)0L,(method)jit_boids3d_stats,calcoffset(t_jit_boids3d,tempForStats));
     jit_class_addattr(_jit_boids3d_class,attr);
     
 	
@@ -667,6 +677,39 @@ t_jit_err jit_boids3d_number(t_jit_boids3d *flockPtr, void *attr, long argc, t_a
             }
         }
     }
+    
+    return 0;
+}
+
+/*
+    Posts various stats to the console for debugging purposes
+ */
+t_jit_err jit_boids3d_stats(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv){
+    
+    post(" - - STATS - - ");
+    
+    //flock size information
+    post("Flock Sizes:");
+    for(int i=0; i<MAX_FLOCKS; i++){
+        post("   %d: %d boids", i, flockPtr->boidCount[i]);
+    }
+    
+    //attractor information
+    if(flockPtr->numAttractors > 0){
+        post("Attractors:");
+        AttractorPtr iterator = flockPtr->attractorLL;
+        while(iterator){
+            post("   ID: %d,  Location: (%f, %f, %f)", iterator->id, iterator->loc[x], iterator->loc[y], iterator->loc[z]);
+            iterator = iterator->nextAttractor;
+        }
+    }else{
+        post("No Attractors.");
+    }
+    
+    //birth location
+    post("Birth Location: (%f, %f, %f)", flockPtr->birthLoc[x], flockPtr->birthLoc[y], flockPtr->birthLoc[z]);
+    
+    post("- - - - - - -");
     
     return 0;
 }
