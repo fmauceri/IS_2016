@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 34.0, 79.0, 1446.0, 887.0 ],
+		"rect" : [ 33.0, 79.0, 1446.0, 887.0 ],
 		"bgcolor" : [ 0.847059, 0.854902, 0.870588, 1.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
@@ -8280,7 +8280,7 @@
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 850.333313, 609.0, 50.0, 22.0 ],
 					"style" : "",
-					"text" : "65."
+					"text" : "250."
 				}
 
 			}
@@ -10974,21 +10974,21 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 362.75, 250.5, 50.0, 22.0 ],
 									"style" : "",
-									"text" : "65."
+									"text" : "250."
 								}
 
 							}
 , 							{
 								"box" : 								{
 									"id" : "obj-14",
-									"linecount" : 3,
+									"linecount" : 4,
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 479.0, 154.0, 62.0, 62.0 ],
 									"style" : "",
-									"text" : "boidCount 15. 50. 0. 0. 0. 0."
+									"text" : "boidCount 20. 0. 200. 10. 0. 20."
 								}
 
 							}
@@ -11002,7 +11002,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 59.75, 506.0, 55.0, 62.0 ],
 									"style" : "",
-									"text" : "number 0. 0. 0. 0. 0. 0. 65."
+									"text" : "number 0. 0. 0. 0. 0. 0. 250."
 								}
 
 							}
@@ -17828,7 +17828,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
-					"patching_rect" : [ 119.75, 1136.000732, 745.666626, 39.166016 ],
+					"patching_rect" : [ 119.75, 1136.000732, 794.916626, 39.166016 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 122.5, 425.228668, 800.0, 38.527069 ],
 					"varname" : "pinkbox",
@@ -17852,7 +17852,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
-					"patching_rect" : [ 119.75, 1098.73291, 745.666626, 44.567272 ],
+					"patching_rect" : [ 119.75, 1098.73291, 794.916626, 44.567272 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 122.5, 386.228668, 800.0, 38.527069 ],
 					"varname" : "whitebox",
@@ -17876,7 +17876,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
-					"patching_rect" : [ 119.75, 1061.35791, 745.666626, 35.375 ],
+					"patching_rect" : [ 119.75, 1061.35791, 794.916626, 35.375 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 122.5, 346.390411, 800.0, 39.609612 ],
 					"varname" : "yellowbox",
@@ -17900,7 +17900,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
-					"patching_rect" : [ 119.75, 1026.869141, 745.666626, 38.431091 ],
+					"patching_rect" : [ 119.75, 1026.869141, 794.916626, 38.431091 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 122.5, 306.390381, 800.0, 39.609612 ],
 					"varname" : "bluebox",
@@ -17924,7 +17924,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
-					"patching_rect" : [ 119.75, 987.732971, 745.666626, 41.567272 ],
+					"patching_rect" : [ 119.75, 987.732971, 794.916626, 41.567272 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 122.5, 267.472931, 800.0, 38.527069 ],
 					"varname" : "greenbox",
@@ -17948,7 +17948,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
-					"patching_rect" : [ 119.75, 949.0, 745.666626, 40.300247 ],
+					"patching_rect" : [ 119.75, 949.0, 794.916626, 40.300247 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 122.5, 228.472931, 800.0, 38.527069 ],
 					"varname" : "redbox",
