@@ -4778,7 +4778,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 532.0, 251.5, 60.0, 22.0 ],
 													"style" : "",
-													"text" : "0. 0. 0."
+													"text" : "-6. 6. 4."
 												}
 
 											}
@@ -5662,7 +5662,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 238.5, 196.0, 55.0, 22.0 ],
 													"style" : "",
-													"text" : "0."
+													"text" : "4."
 												}
 
 											}
@@ -5688,7 +5688,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 179.5, 196.0, 53.0, 22.0 ],
 													"style" : "",
-													"text" : "0."
+													"text" : "6."
 												}
 
 											}
@@ -5714,7 +5714,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 123.5, 196.0, 76.0, 22.0 ],
 													"style" : "",
-													"text" : "0."
+													"text" : "-6."
 												}
 
 											}
@@ -5741,7 +5741,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 53.0, 189.0, 50.0, 62.0 ],
 													"style" : "",
-													"text" : "jit_matrix u964000360"
+													"text" : "jit_matrix u043000360"
 												}
 
 											}
@@ -8280,7 +8280,7 @@
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 850.333313, 609.0, 50.0, 22.0 ],
 					"style" : "",
-					"text" : "45."
+					"text" : "65."
 				}
 
 			}
@@ -9057,7 +9057,7 @@
 			}
 , 			{
 				"box" : 				{
-					"cols" : 499500,
+					"cols" : 400,
 					"fontface" : 0,
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
@@ -10974,21 +10974,21 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 362.75, 250.5, 50.0, 22.0 ],
 									"style" : "",
-									"text" : "45."
+									"text" : "65."
 								}
 
 							}
 , 							{
 								"box" : 								{
 									"id" : "obj-14",
-									"linecount" : 4,
+									"linecount" : 3,
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 479.0, 154.0, 62.0, 62.0 ],
 									"style" : "",
-									"text" : "boidCount 15. 10. 0. 20. 0. 0."
+									"text" : "boidCount 15. 50. 0. 0. 0. 0."
 								}
 
 							}
@@ -11002,7 +11002,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 59.75, 506.0, 55.0, 62.0 ],
 									"style" : "",
-									"text" : "number 0. 0. 0. 0. 0. 0. 45."
+									"text" : "number 0. 0. 0. 0. 0. 0. 65."
 								}
 
 							}
@@ -11934,7 +11934,7 @@
 ,
 					"style" : "",
 					"text" : "autopattr",
-					"varname" : "u624000963"
+					"varname" : "u866000963"
 				}
 
 			}
@@ -21099,6 +21099,15 @@
 					"disabled" : 0,
 					"hidden" : 0,
 					"source" : [ "obj-179", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-102", 0 ],
+					"disabled" : 0,
+					"hidden" : 0,
+					"source" : [ "obj-19", 3 ]
 				}
 
 			}

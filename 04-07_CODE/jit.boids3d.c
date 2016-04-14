@@ -13,16 +13,13 @@
 #include <math.h>
 
 // constants
-#define			kAssistInlet	1
-#define			kAssistOutlet	2
-#define			kMaxLong		0xFFFFFFFF
 #define			kMaxNeighbors	200
+#define         kMaxNeighborLines 400
 #define         kMaxNumBoids    1000
-
-//Maximum number of flocks allowed in the simulation
-#define         MAX_FLOCKS      6
+#define         MAX_FLOCKS      6 //Maximum number of flocks allowed in the simulation
 
 // initial flight parameters
+// NOTE: these aren't really used because the patcher is banged on startup and adds default parameters
 const int           kBoidMaxAge     = 1000; // default max age
 const long			kNumBoids		= 0;	// number of boids for each flock
 const long			kNumNeighbors	= 2;	// must be <= kMaxNeighbors
@@ -61,15 +58,14 @@ const double        kFlyRectScalingFactor = 10;
 #define				front		4
 #define				back		5
 
+
 /*
-    Struct for an attract pt
+    Struct for an Attractor
  */
 typedef struct Attractor {
     
     int id;
-    
     double loc[3];
-    
     struct Attractor *nextAttractor;
     
 } Attractor, *AttractorPtr;
@@ -97,8 +93,9 @@ typedef struct Boid {
     
 } Boid, *BoidPtr;
 
+
 /*
-    Struct for a line between 2 boids
+    Struct for a line between 2 neighbor boids
     Stored in an array to be output in the 4th outlet
  */
 typedef struct NeighborLine {
@@ -108,6 +105,7 @@ typedef struct NeighborLine {
     int         flockID;
     
 } NeighborLine, *NeighborLinePtr;
+
 
 /*
     Struct for the actual jitter object
@@ -150,7 +148,7 @@ typedef struct _jit_boids3d
     double          birthLoc[3];
     
     //array to hold the lines between neighbors
-    NeighborLinePtr neighborhoodConnections[(kMaxNumBoids * (kMaxNumBoids-1))/2];
+    NeighborLinePtr neighborhoodConnections[kMaxNeighborLines];
     long            sizeOfNeighborhoodConnections;
 	
     BoidPtr         flockLL[MAX_FLOCKS]; //array holding 6 linked lists of the flocks
@@ -199,9 +197,7 @@ t_jit_err jit_boids3d_attractpt(t_jit_boids3d *flockPtr, void *attr, long argc, 
 t_jit_err jit_boids3d_addattractor(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
 t_jit_err jit_boids3d_deleteattractor(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
 t_jit_err jit_boids3d_birthloc(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
-
-//posts various stats to the console for debugging purposes
-t_jit_err jit_boids3d_stats(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
+t_jit_err jit_boids3d_stats(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv); //posts various stats to the max console
 
 
 //Initialization methods
@@ -376,11 +372,12 @@ t_jit_err jit_boids3d_init(void)
     
 }
 
-//boids attribute methods
 
-/*
-    The following methods are for moving/adding/deleting attractors
- */
+//
+//
+//      MARK: Boids Attribute Methods
+//
+//
 
 /*
     Updates the position of an attractor
@@ -410,7 +407,7 @@ t_jit_err jit_boids3d_attractpt(t_jit_boids3d *flockPtr, void *attr, long argc, 
 
 
 /*
-    Adds an attractor at the origin
+    Adds an attractor at the origin with a given ID
     Inputs: none
  */
 t_jit_err jit_boids3d_addattractor(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
@@ -513,6 +510,8 @@ t_jit_err jit_boids3d_neighbors(t_jit_boids3d *flockPtr, void *attr, long argc, 
     flockPtr->neighbors = (double)MIN(jit_atom_getfloat(argv), kMaxNeighbors);
     return JIT_ERR_NONE;
 }
+//--------------------------
+
 t_jit_err jit_boids3d_nradius(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
     int flockID = (int)jit_atom_getfloat(argv+1);
@@ -717,6 +716,12 @@ t_jit_err jit_boids3d_stats(t_jit_boids3d *flockPtr, void *attr, long argc, t_at
 }
 
 
+//
+//
+//      MARK: Methods for output
+//
+//
+
 /*
  Prepares the output matrix and sends it back to the max patch
  */
@@ -769,12 +774,10 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
         out3_minfo.planecount = 4; //xyz, id
         
         //dimensions of the neighborhood line connecting matrix
-        out4_minfo.dim[0] = (kMaxNumBoids * (kMaxNumBoids-1))/2.0;
+        out4_minfo.dim[0] = kMaxNeighborLines;
         out4_minfo.dim[1] = 1;
         out4_minfo.type = _jit_sym_float32;
         out4_minfo.planecount = 7;
-        
-        post("DIM: %d", out4_minfo.dim[0]);
         
         //output the correct mode
 		switch(flockPtr->mode) { // newpos
@@ -837,9 +840,8 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
         //populate the 4th outlet with data
         float *out4_data = (float*)out4_bp;
         int tempCount = flockPtr->sizeOfNeighborhoodConnections;
-        post("TEMPCOUNT = %d", tempCount);
         
-        for(int i=0; i<(kMaxNumBoids * (kMaxNumBoids-1))/2; i++){
+        for(int i=0; i<kMaxNeighborLines; i++){
             
             if(tempCount > 0){
                 out4_data[0] = flockPtr->neighborhoodConnections[i]->boidA[x];
@@ -890,7 +892,7 @@ out: //output the matrix
 
 
 /*
-    Does a flight step and populates the first outlet matrix with the data (boids x,y,z etc)
+    Populates the first outlet matrix with the data (boids x,y,z etc)
  */
 void jit_boids3d_calculate_ndim(t_jit_boids3d *flockPtr, long dimcount, long *dim, long planecount,
                                 t_jit_matrix_info *out_minfo, char *bop)
@@ -979,9 +981,12 @@ void jit_boids3d_calculate_ndim(t_jit_boids3d *flockPtr, long dimcount, long *di
     }
 }
 
-/*
-    MARK: ----------------------------Below methods do not relate to communication with the Max Patch, they are only used within the external---------------------------------
- */
+
+//
+//
+//  MARK: Internal methods to the external for updating boids - Max patch does not interact directly with these
+//
+//
 
 
 /*
@@ -1031,7 +1036,6 @@ void FlightStep(t_jit_boids3d *flockPtr)
             }
             
             //save position and velocity
-            
             iterator->oldPos[x] = iterator->newPos[x];
             iterator->oldPos[y] = iterator->newPos[y];
             iterator->oldPos[z] = iterator->newPos[z];
@@ -1106,6 +1110,7 @@ void FlightStep(t_jit_boids3d *flockPtr)
     >This is a method that is a combo of what was previously FindFlockCenter() and MatchAndAvoidNeighbors(), because both involve calculating the neighbors of a boid
  
  TODO: possible optimization = if we're only allowing boids from same flock, only calculate the center once for each flock
+ TODO: avoidSpeed is never used
  */
 void CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, double *matchNeighborVel, double *separationNeighborVel)
 {
@@ -1169,7 +1174,7 @@ void CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, dou
                 }
                 
                 //Check if a line needs to be drawn between these boids
-                if(startAddingBoidLines == 1){
+                if(startAddingBoidLines == 1 && flockPtr->sizeOfNeighborhoodConnections < kMaxNeighborLines) {
                     NeighborLinePtr newLine = InitNeighborhoodLine(flockPtr, theBoid, iterator, theBoid->flockID);
                     if(!newLine){
                         post("ERROR: Failed to allocate a line");
@@ -1178,7 +1183,6 @@ void CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, dou
                     
                     //add the new line to the array
                     flockPtr->neighborhoodConnections[flockPtr->sizeOfNeighborhoodConnections] = newLine;
-                    post("NEIGHBORHOOD CONNECTIONS = %d", flockPtr->sizeOfNeighborhoodConnections);
                     flockPtr->sizeOfNeighborhoodConnections++;
                     
                 }
@@ -1498,6 +1502,23 @@ void InitFlock(t_jit_boids3d *flockPtr)
     }
 }
 
+/*
+ Calculates the total number of boids across all flocks
+ */
+int CalcNumBoids(t_jit_boids3d *flockPtr)
+{
+    int boidsCounter = 0;
+    for (int i=0; i<MAX_FLOCKS; i++){
+        boidsCounter += flockPtr->boidCount[i];
+    }
+    return boidsCounter;
+}
+
+//
+//
+//      MARK: Initialization and Free methods
+//
+//
 
 /*
  Initializes a LL. Returns a pointer to its head
@@ -1510,7 +1531,7 @@ BoidPtr InitLL(t_jit_boids3d *flockPtr, long numBoids, int flockID)
         BoidPtr theBoid = InitBoid(flockPtr); //make a new boid
         if(!theBoid){
             printf("ERROR: failed to malloc a boid\n");
-            return;
+            return NULL;
         }
         
         //Add the boid to the LL or make it the head (if nothing has already been added)
@@ -1630,19 +1651,6 @@ AttractorPtr InitAttractor(t_jit_boids3d *flockPtr)
     theAttractor->loc[2] = 0.0;
     
     return theAttractor;
-}
-
-
-/*
-    Calculates the total number of boids across all flocks
- */
-int CalcNumBoids(t_jit_boids3d *flockPtr)
-{
-    int boidsCounter = 0;
-    for (int i=0; i<MAX_FLOCKS; i++){
-        boidsCounter += flockPtr->boidCount[i];
-    }
-    return boidsCounter;
 }
 
 
