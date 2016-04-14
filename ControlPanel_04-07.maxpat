@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 33.0, 79.0, 1446.0, 887.0 ],
+		"rect" : [ 34.0, 79.0, 1446.0, 887.0 ],
 		"bgcolor" : [ 0.847059, 0.854902, 0.870588, 1.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
@@ -4778,7 +4778,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 532.0, 251.5, 60.0, 22.0 ],
 													"style" : "",
-													"text" : "-6. 6. 4."
+													"text" : "0. 0. 0."
 												}
 
 											}
@@ -5662,7 +5662,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 238.5, 196.0, 55.0, 22.0 ],
 													"style" : "",
-													"text" : "4."
+													"text" : "0."
 												}
 
 											}
@@ -5688,7 +5688,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 179.5, 196.0, 53.0, 22.0 ],
 													"style" : "",
-													"text" : "6."
+													"text" : "0."
 												}
 
 											}
@@ -5714,7 +5714,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 123.5, 196.0, 76.0, 22.0 ],
 													"style" : "",
-													"text" : "-6."
+													"text" : "0."
 												}
 
 											}
@@ -5741,7 +5741,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 53.0, 189.0, 50.0, 62.0 ],
 													"style" : "",
-													"text" : "jit_matrix u043000360"
+													"text" : "jit_matrix u293000360"
 												}
 
 											}
@@ -8280,7 +8280,7 @@
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 850.333313, 609.0, 50.0, 22.0 ],
 					"style" : "",
-					"text" : "250."
+					"text" : "220."
 				}
 
 			}
@@ -10974,7 +10974,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 362.75, 250.5, 50.0, 22.0 ],
 									"style" : "",
-									"text" : "250."
+									"text" : "220."
 								}
 
 							}
@@ -10988,7 +10988,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 479.0, 154.0, 62.0, 62.0 ],
 									"style" : "",
-									"text" : "boidCount 20. 0. 200. 10. 0. 20."
+									"text" : "boidCount 150. 0. 0. 20. 50. 0."
 								}
 
 							}
@@ -11002,7 +11002,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 59.75, 506.0, 55.0, 62.0 ],
 									"style" : "",
-									"text" : "number 0. 0. 0. 0. 0. 0. 250."
+									"text" : "number 0. 0. 0. 0. 0. 0. 220."
 								}
 
 							}
@@ -11934,7 +11934,7 @@
 ,
 					"style" : "",
 					"text" : "autopattr",
-					"varname" : "u866000963"
+					"varname" : "u267000963"
 				}
 
 			}
