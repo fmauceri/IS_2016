@@ -60,7 +60,7 @@ const double        kFlyRectScalingFactor = 10;
 
 
 /*
-    Struct for an Attractor
+ Struct for an Attractor
  */
 typedef struct Attractor {
     
@@ -68,26 +68,28 @@ typedef struct Attractor {
     double loc[3];
     struct Attractor *nextAttractor;
     
+    double attractorWeight;
+    
 } Attractor, *AttractorPtr;
 
 /*
-    Struct for a boid object
-        Boids are stored in LinkedLists by flock in the _jit_boids3d struct
+ Struct for a boid object
+ Boids are stored in LinkedLists by flock in the _jit_boids3d struct
  
-    TODO: add some sort of ID
+ TODO: add some sort of ID
  */
 typedef struct Boid {
     
     int         flockID;
     int         age;
     
-	double		oldPos[3];
-	double		newPos[3];
-	double		oldDir[3];
-	double		newDir[3];
-	double		speed;
-	long		neighbor[kMaxNeighbors];
-	double		neighborDistSqr[kMaxNeighbors];
+    double		oldPos[3];
+    double		newPos[3];
+    double		oldDir[3];
+    double		newDir[3];
+    double		speed;
+    long		neighbor[kMaxNeighbors];
+    double		neighborDistSqr[kMaxNeighbors];
     
     struct Boid *nextBoid;
     
@@ -95,8 +97,8 @@ typedef struct Boid {
 
 
 /*
-    Struct for a line between 2 neighbor boids
-    Stored in an array to be output in the 4th outlet
+ Struct for a line between 2 neighbor boids
+ Stored in an array to be output in the 4th outlet
  */
 typedef struct NeighborLine {
     
@@ -108,41 +110,41 @@ typedef struct NeighborLine {
 
 
 /*
-    Struct for the actual jitter object
+ Struct for the actual jitter object
  */
 typedef struct _jit_boids3d
 {
-	t_object		ob;
-	char			mode;
-	long			number;
+    t_object		ob;
+    char			mode;
+    long			number;
     long            numAttractors;
-	long			neighbors;
-	
-	double			flyrect[6]; //dimensions of the simulation
-	long			flyRectCount;
+    long			neighbors;
+    
+    double			flyrect[6]; //dimensions of the simulation
+    long			flyRectCount;
     
     int             allowNeighborsFromDiffFlock; //can boids find neighbors that aren't in their flock
-	
+    
     //Parameters for each flock
     int             boidCount[MAX_FLOCKS];
     int             flockID[MAX_FLOCKS]; //?
-	double 			minspeed[MAX_FLOCKS];
-	double			maxspeed[MAX_FLOCKS];
-	double			center[MAX_FLOCKS];
-	double			attract[MAX_FLOCKS];
-	double			match[MAX_FLOCKS];
+    double 			minspeed[MAX_FLOCKS];
+    double			maxspeed[MAX_FLOCKS];
+    double			center[MAX_FLOCKS];
+    double			attract[MAX_FLOCKS];
+    double			match[MAX_FLOCKS];
     double			sepwt[MAX_FLOCKS];
     double			sepdist[MAX_FLOCKS];
-	double			speed[MAX_FLOCKS];
-	double			inertia[MAX_FLOCKS];
-	double			accel[MAX_FLOCKS];
+    double			speed[MAX_FLOCKS];
+    double			inertia[MAX_FLOCKS];
+    double			accel[MAX_FLOCKS];
     double          neighborRadius[MAX_FLOCKS];
     double          age[MAX_FLOCKS];
-	
+    
     //XYZ for each flock
     
     double          tempCenterPt[3];
-	long			centerPtCount;
+    long			centerPtCount;
     
     //stipulates where boids are born in space when they are added (DEFAULT = {0, 0, 0,})
     double          birthLoc[3];
@@ -150,20 +152,20 @@ typedef struct _jit_boids3d
     //array to hold the lines between neighbors
     NeighborLinePtr neighborhoodConnections[kMaxNeighborLines];
     long            sizeOfNeighborhoodConnections;
-	
+    
     BoidPtr         flockLL[MAX_FLOCKS]; //array holding 6 linked lists of the flocks
     AttractorPtr    attractorLL; //linked list for attractors
     
     int tempForStats[1];
-	
-	double 			d2r;
-	double			r2d;
+    
+    double 			d2r;
+    double			r2d;
     
 } t_jit_boids3d;
 
 
 /*
-    Methods for the jitter object
+ Methods for the jitter object
  */
 void *_jit_boids3d_class;
 t_jit_err jit_boids3d_init(void);
@@ -176,8 +178,8 @@ void jit_boids3d_calculate_ndim(t_jit_boids3d *flockPtr, long dimcount, long *di
 
 //Attribute methods
 /*
-    These are the method that will get called when a message is received from the Max patch
-        ie) [pak age 0. 0.] -> will call the jit_boids3d_age() method
+ These are the method that will get called when a message is received from the Max patch
+ ie) [pak age 0. 0.] -> will call the jit_boids3d_age() method
  */
 t_jit_err jit_boids3d_neighbors(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
 t_jit_err jit_boids3d_minspeed(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
@@ -221,95 +223,95 @@ int CalcNumBoids(t_jit_boids3d *flockPtr);
 
 
 /*
-    Initializes the jitter object
+ Initializes the jitter object
  */
 t_jit_err jit_boids3d_init(void)
 {
     long attrflags=0;
-	t_jit_object *attr,*mop,*o, *o2, *o3, *o4; //o, o2, and o3 are the 3 outlets. Mop stands for a matrix in jitter
-	t_symbol *atsym;
-	
-	atsym = gensym("jit_attr_offset");
-	
+    t_jit_object *attr,*mop,*o, *o2, *o3, *o4; //o, o2, and o3 are the 3 outlets. Mop stands for a matrix in jitter
+    t_symbol *atsym;
+    
+    atsym = gensym("jit_attr_offset");
+    
     //make a class and tell it the methods it will use to initialize and free
-	_jit_boids3d_class = jit_class_new("jit_boids3d",(method)jit_boids3d_new,(method)freeFlocks,
+    _jit_boids3d_class = jit_class_new("jit_boids3d",(method)jit_boids3d_new,(method)freeFlocks,
                                        sizeof(t_jit_boids3d),0L);
     
-	//add mop
-	mop = jit_object_new(_jit_sym_jit_mop,0,4); //object will have 0 inlets and 3 outlets
-	o = jit_object_method(mop,_jit_sym_getoutput,1); //first outlet
+    //add mop
+    mop = jit_object_new(_jit_sym_jit_mop,0,4); //object will have 0 inlets and 3 outlets
+    o = jit_object_method(mop,_jit_sym_getoutput,1); //first outlet
     o2 = jit_object_method(mop,_jit_sym_getoutput,2); //second outlet
     o3 = jit_object_method(mop,_jit_sym_getoutput,3); //third outlet
     o4 = jit_object_method(mop,_jit_sym_getoutput,4); //fourth outlet
-	jit_attr_setlong(o,_jit_sym_dimlink,0);
+    jit_attr_setlong(o,_jit_sym_dimlink,0);
     jit_attr_setlong(o2,_jit_sym_dimlink,0);
     jit_attr_setlong(o3,_jit_sym_dimlink,0);
     jit_attr_setlong(o4,_jit_sym_dimlink,0);
-
-	
-	jit_class_addadornment(_jit_boids3d_class,mop);
-	//add methods
-	jit_class_addmethod(_jit_boids3d_class, (method)jit_boids3d_matrix_calc, 		"matrix_calc", 		A_CANT, 0L);
-	jit_class_addmethod(_jit_boids3d_class, (method)InitBoid, 				"init_boid", 			A_USURP_LOW, 0L);
     
-	//add attributes
-	attrflags = JIT_ATTR_GET_DEFER_LOW | JIT_ATTR_SET_USURP_LOW;
+    
+    jit_class_addadornment(_jit_boids3d_class,mop);
+    //add methods
+    jit_class_addmethod(_jit_boids3d_class, (method)jit_boids3d_matrix_calc, 		"matrix_calc", 		A_CANT, 0L);
+    jit_class_addmethod(_jit_boids3d_class, (method)InitBoid, 				"init_boid", 			A_USURP_LOW, 0L);
+    
+    //add attributes
+    attrflags = JIT_ATTR_GET_DEFER_LOW | JIT_ATTR_SET_USURP_LOW;
     
     //mode
-	attr = jit_object_new(atsym,"mode",_jit_sym_char,attrflags,
+    attr = jit_object_new(atsym,"mode",_jit_sym_char,attrflags,
                           (method)0L,(method)0L,calcoffset(t_jit_boids3d,mode));
-	jit_class_addattr(_jit_boids3d_class,attr);
+    jit_class_addattr(_jit_boids3d_class,attr);
     
     //allow boids from diff flocks
-	attr = jit_object_new(atsym,"diffFlock",_jit_sym_char,attrflags,
+    attr = jit_object_new(atsym,"diffFlock",_jit_sym_char,attrflags,
                           (method)0L,(method)0L,calcoffset(t_jit_boids3d,allowNeighborsFromDiffFlock));
-	jit_class_addattr(_jit_boids3d_class,attr);
+    jit_class_addattr(_jit_boids3d_class,attr);
     
     //neighbor radius
-	attr = jit_object_new(_jit_sym_jit_attr_offset_array,"nradius",_jit_sym_float64,2,attrflags,
+    attr = jit_object_new(_jit_sym_jit_attr_offset_array,"nradius",_jit_sym_float64,2,attrflags,
                           (method)0L,(method)jit_boids3d_nradius, calcoffset(t_jit_boids3d,neighborRadius));
-	jit_class_addattr(_jit_boids3d_class,attr);
+    jit_class_addattr(_jit_boids3d_class,attr);
     
-	//number
-	attr = jit_object_new(_jit_sym_jit_attr_offset_array,"number",_jit_sym_long, 6, attrflags,
+    //number
+    attr = jit_object_new(_jit_sym_jit_attr_offset_array,"number",_jit_sym_long, 6, attrflags,
                           (method)0L,(method)jit_boids3d_number,calcoffset(t_jit_boids3d,number));
-	jit_class_addattr(_jit_boids3d_class,attr);
-	
-	//neighbors
-	attr = jit_object_new(atsym,"neighbors",_jit_sym_long,attrflags,
-                          (method)0L,(method)jit_boids3d_neighbors,calcoffset(t_jit_boids3d,neighbors));
-	jit_class_addattr(_jit_boids3d_class,attr);
+    jit_class_addattr(_jit_boids3d_class,attr);
     
-	//flyrect
-	attr = jit_object_new(_jit_sym_jit_attr_offset_array,"flyrect",_jit_sym_float64,6,attrflags,
+    //neighbors
+    attr = jit_object_new(atsym,"neighbors",_jit_sym_long,attrflags,
+                          (method)0L,(method)jit_boids3d_neighbors,calcoffset(t_jit_boids3d,neighbors));
+    jit_class_addattr(_jit_boids3d_class,attr);
+    
+    //flyrect
+    attr = jit_object_new(_jit_sym_jit_attr_offset_array,"flyrect",_jit_sym_float64,6,attrflags,
                           (method)0L,(method)0L,calcoffset(t_jit_boids3d,flyRectCount),calcoffset(t_jit_boids3d,flyrect));
-	jit_class_addattr(_jit_boids3d_class,attr);
-	
-	//minspeed
-	attr = jit_object_new(_jit_sym_jit_attr_offset_array,"minspeed",_jit_sym_float64,2,attrflags,
+    jit_class_addattr(_jit_boids3d_class,attr);
+    
+    //minspeed
+    attr = jit_object_new(_jit_sym_jit_attr_offset_array,"minspeed",_jit_sym_float64,2,attrflags,
                           (method)0L,(method)jit_boids3d_minspeed,calcoffset(t_jit_boids3d,minspeed));
-	jit_class_addattr(_jit_boids3d_class,attr);
-	
-	//maxspeed
-	attr = jit_object_new(_jit_sym_jit_attr_offset_array,"maxspeed",_jit_sym_float64,2,attrflags,
+    jit_class_addattr(_jit_boids3d_class,attr);
+    
+    //maxspeed
+    attr = jit_object_new(_jit_sym_jit_attr_offset_array,"maxspeed",_jit_sym_float64,2,attrflags,
                           (method)0L,(method)jit_boids3d_maxspeed,calcoffset(t_jit_boids3d,maxspeed));
-	jit_class_addattr(_jit_boids3d_class,attr);
-	
-	//center
-	attr = jit_object_new(_jit_sym_jit_attr_offset_array,"center",_jit_sym_float64,2,attrflags,
+    jit_class_addattr(_jit_boids3d_class,attr);
+    
+    //center
+    attr = jit_object_new(_jit_sym_jit_attr_offset_array,"center",_jit_sym_float64,2,attrflags,
                           (method)0L,(method)jit_boids3d_center,calcoffset(t_jit_boids3d,center));
-	jit_class_addattr(_jit_boids3d_class,attr);
-	
-	//attract
-	attr = jit_object_new(_jit_sym_jit_attr_offset_array,"attract",_jit_sym_float64,2,attrflags,
+    jit_class_addattr(_jit_boids3d_class,attr);
+    
+    //attract
+    attr = jit_object_new(_jit_sym_jit_attr_offset_array,"attract",_jit_sym_float64,2,attrflags,
                           (method)0L,(method)jit_boids3d_attract,calcoffset(t_jit_boids3d,attract));
-	jit_class_addattr(_jit_boids3d_class,attr);
-	
-	//match
-	attr = jit_object_new(_jit_sym_jit_attr_offset_array,"match",_jit_sym_float64,2,attrflags,
+    jit_class_addattr(_jit_boids3d_class,attr);
+    
+    //match
+    attr = jit_object_new(_jit_sym_jit_attr_offset_array,"match",_jit_sym_float64,2,attrflags,
                           (method)0L,(method)jit_boids3d_match,calcoffset(t_jit_boids3d,match));
-	jit_class_addattr(_jit_boids3d_class,attr);
-	
+    jit_class_addattr(_jit_boids3d_class,attr);
+    
     //separation weight
     attr = jit_object_new(_jit_sym_jit_attr_offset_array,"sepwt",_jit_sym_float64,2,attrflags,
                           (method)0L,(method)jit_boids3d_sepwt,calcoffset(t_jit_boids3d,sepwt));
@@ -319,21 +321,21 @@ t_jit_err jit_boids3d_init(void)
     attr = jit_object_new(_jit_sym_jit_attr_offset_array,"sepdist",_jit_sym_float64,2,attrflags,
                           (method)0L,(method)jit_boids3d_sepdist,calcoffset(t_jit_boids3d,sepdist));
     jit_class_addattr(_jit_boids3d_class,attr);
-	
-	//speed
-	attr = jit_object_new(_jit_sym_jit_attr_offset_array,"speed",_jit_sym_float64,2,attrflags,
+    
+    //speed
+    attr = jit_object_new(_jit_sym_jit_attr_offset_array,"speed",_jit_sym_float64,2,attrflags,
                           (method)0L,(method)jit_boids3d_speed,calcoffset(t_jit_boids3d,speed));
-	jit_class_addattr(_jit_boids3d_class,attr);
-	
-	//inertia
-	attr = jit_object_new(_jit_sym_jit_attr_offset_array,"inertia",_jit_sym_float64,2,attrflags,
+    jit_class_addattr(_jit_boids3d_class,attr);
+    
+    //inertia
+    attr = jit_object_new(_jit_sym_jit_attr_offset_array,"inertia",_jit_sym_float64,2,attrflags,
                           (method)0L,(method)jit_boids3d_inertia,calcoffset(t_jit_boids3d,inertia));
-	jit_class_addattr(_jit_boids3d_class,attr);
-	
-	//accel
-	attr = jit_object_new(_jit_sym_jit_attr_offset_array,"accel",_jit_sym_float64,2,attrflags,
+    jit_class_addattr(_jit_boids3d_class,attr);
+    
+    //accel
+    attr = jit_object_new(_jit_sym_jit_attr_offset_array,"accel",_jit_sym_float64,2,attrflags,
                           (method)0L,(method)jit_boids3d_accel,calcoffset(t_jit_boids3d,accel));
-	jit_class_addattr(_jit_boids3d_class,attr);
+    jit_class_addattr(_jit_boids3d_class,attr);
     
     //attractpt
     attr = jit_object_new(_jit_sym_jit_attr_offset_array,"attractpt",_jit_sym_float64, 4, attrflags,
@@ -365,10 +367,10 @@ t_jit_err jit_boids3d_init(void)
                           (method)0L,(method)jit_boids3d_stats,calcoffset(t_jit_boids3d,tempForStats));
     jit_class_addattr(_jit_boids3d_class,attr);
     
-	
-	jit_class_register(_jit_boids3d_class); //register the class with Max
     
-	return JIT_ERR_NONE;
+    jit_class_register(_jit_boids3d_class); //register the class with Max
+    
+    return JIT_ERR_NONE;
     
 }
 
@@ -380,14 +382,14 @@ t_jit_err jit_boids3d_init(void)
 //
 
 /*
-    Updates the position of an attractor
-    Inputs: 
-        argv+0/1/2 = xyz position to update to
-        argv+3 = ID of the attractor
+ Updates the position of an attractor
+ Inputs:
+ argv+0/1/2 = xyz position to update to
+ argv+3 = ID of the attractor
  */
 t_jit_err jit_boids3d_attractpt(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
-    int attractorID = (int)jit_atom_getfloat(argv+3);
+    int attractorID = (int)jit_atom_getfloat(argv+4);
     AttractorPtr iterator = flockPtr->attractorLL;
     while (iterator){
         if(attractorID == iterator->id){
@@ -396,6 +398,7 @@ t_jit_err jit_boids3d_attractpt(t_jit_boids3d *flockPtr, void *attr, long argc, 
                 iterator->loc[0] = (double)jit_atom_getfloat(argv);
                 iterator->loc[1] = (double)jit_atom_getfloat(argv+1);
                 iterator->loc[2] = (double)jit_atom_getfloat(argv+2);
+                iterator->attractorWeight = (double)jit_atom_getfloat(argv+3);
             }
             return JIT_ERR_NONE;
         }
@@ -406,9 +409,10 @@ t_jit_err jit_boids3d_attractpt(t_jit_boids3d *flockPtr, void *attr, long argc, 
 }
 
 
+
 /*
-    Adds an attractor at the origin with a given ID
-    Inputs: none
+ Adds an attractor at the origin with a given ID
+ Inputs: none
  */
 t_jit_err jit_boids3d_addattractor(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
@@ -457,9 +461,9 @@ t_jit_err jit_boids3d_addattractor(t_jit_boids3d *flockPtr, void *attr, long arg
 
 
 /*
-    Deletes a specific attractor
-    Inputs: 
-        argv+0: ID of the attractor to be deleted
+ Deletes a specific attractor
+ Inputs:
+ argv+0: ID of the attractor to be deleted
  */
 t_jit_err jit_boids3d_deleteattractor(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
@@ -501,10 +505,10 @@ t_jit_err jit_boids3d_deleteattractor(t_jit_boids3d *flockPtr, void *attr, long 
 
 
 /*
-    Following methods update flock-specific attributes
+ Following methods update flock-specific attributes
  */
 
- //---NOT CURRENTLY USED---
+//---NOT CURRENTLY USED---
 t_jit_err jit_boids3d_neighbors(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
     flockPtr->neighbors = (double)MIN(jit_atom_getfloat(argv), kMaxNeighbors);
@@ -515,42 +519,42 @@ t_jit_err jit_boids3d_neighbors(t_jit_boids3d *flockPtr, void *attr, long argc, 
 t_jit_err jit_boids3d_nradius(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
     int flockID = (int)jit_atom_getfloat(argv+1);
-	flockPtr->neighborRadius[flockID] = (double)MAX(jit_atom_getfloat(argv), 0.0);
+    flockPtr->neighborRadius[flockID] = (double)MAX(jit_atom_getfloat(argv), 0.0);
     return JIT_ERR_NONE;
 }
 
 t_jit_err jit_boids3d_minspeed(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
     int flockID = (int)jit_atom_getfloat(argv+1);
-	flockPtr->minspeed[flockID] = (double)MAX(jit_atom_getfloat(argv), 0.000001);
+    flockPtr->minspeed[flockID] = (double)MAX(jit_atom_getfloat(argv), 0.000001);
     return JIT_ERR_NONE;
 }
 
 t_jit_err jit_boids3d_maxspeed(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
     int flockID = (int)jit_atom_getfloat(argv+1);
-	flockPtr->maxspeed[flockID] = (double)MAX(jit_atom_getfloat(argv), 0.000001);
+    flockPtr->maxspeed[flockID] = (double)MAX(jit_atom_getfloat(argv), 0.000001);
     return JIT_ERR_NONE;
 }
 
 t_jit_err jit_boids3d_center(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
     int flockID = (int)jit_atom_getfloat(argv+1);
-	flockPtr->center[flockID] = (double)MAX(jit_atom_getfloat(argv), 0.000001);
+    flockPtr->center[flockID] = (double)MAX(jit_atom_getfloat(argv), 0.000001);
     return JIT_ERR_NONE;
 }
 
 t_jit_err jit_boids3d_attract(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
     int flockID = (int)jit_atom_getfloat(argv+1);
-	flockPtr->attract[flockID] = (double)MAX(jit_atom_getfloat(argv), 0.000001);
+    flockPtr->attract[flockID] = (double)MAX(jit_atom_getfloat(argv), 0.000001);
     return JIT_ERR_NONE;
 }
 
 t_jit_err jit_boids3d_match(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
     int flockID = (int)jit_atom_getfloat(argv+1);
-	flockPtr->match[flockID] = (double)MAX(jit_atom_getfloat(argv), 0.000001);
+    flockPtr->match[flockID] = (double)MAX(jit_atom_getfloat(argv), 0.000001);
     return JIT_ERR_NONE;
 }
 
@@ -571,26 +575,26 @@ t_jit_err jit_boids3d_sepdist(t_jit_boids3d *flockPtr, void *attr, long argc, t_
 t_jit_err jit_boids3d_speed(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
     int flockID = (int)jit_atom_getfloat(argv+1);
-	flockPtr->speed[flockID] = (double)MAX(jit_atom_getfloat(argv), 0.000001);
+    flockPtr->speed[flockID] = (double)MAX(jit_atom_getfloat(argv), 0.000001);
     return JIT_ERR_NONE;
 }
 
 t_jit_err jit_boids3d_inertia(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
-	double val = (double)jit_atom_getfloat(argv);
+    double val = (double)jit_atom_getfloat(argv);
     int flockID =(int)jit_atom_getfloat(argv+1);
-	
-	if(val == 0.0)
-		flockPtr->inertia[flockID] = 0.000001;
-	else
-		flockPtr->inertia[flockID] = val;
+    
+    if(val == 0.0)
+        flockPtr->inertia[flockID] = 0.000001;
+    else
+        flockPtr->inertia[flockID] = val;
     return JIT_ERR_NONE;
 }
 
 t_jit_err jit_boids3d_accel(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
     int flockID = (int)jit_atom_getfloat(argv+1);
-	flockPtr->accel[flockID] = (double)MAX(jit_atom_getfloat(argv), 0.000001);
+    flockPtr->accel[flockID] = (double)MAX(jit_atom_getfloat(argv), 0.000001);
     return JIT_ERR_NONE;
 }
 
@@ -611,7 +615,7 @@ t_jit_err jit_boids3d_birthloc(t_jit_boids3d *flockPtr, void *attr, long argc, t
     flockPtr->birthLoc[x] = (double)jit_atom_getfloat(argv);
     flockPtr->birthLoc[y] = (double)jit_atom_getfloat(argv+1);
     flockPtr->birthLoc[z] = (double)jit_atom_getfloat(argv+2);
-
+    
     return JIT_ERR_NONE;
 }
 
@@ -683,7 +687,7 @@ t_jit_err jit_boids3d_number(t_jit_boids3d *flockPtr, void *attr, long argc, t_a
 }
 
 /*
-    Posts various stats to the console for debugging purposes
+ Posts various stats to the console for debugging purposes
  */
 t_jit_err jit_boids3d_stats(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv){
     
@@ -700,7 +704,7 @@ t_jit_err jit_boids3d_stats(t_jit_boids3d *flockPtr, void *attr, long argc, t_at
         post("Attractors:");
         AttractorPtr iterator = flockPtr->attractorLL;
         while(iterator){
-            post("   ID: %d,  Location: (%f, %f, %f)", iterator->id, iterator->loc[x], iterator->loc[y], iterator->loc[z]);
+            post("   ID: %d,  Location: (%f, %f, %f), Strength: %f", iterator->id, iterator->loc[x], iterator->loc[y], iterator->loc[z], iterator->attractorWeight);
             iterator = iterator->nextAttractor;
         }
     }else{
@@ -731,47 +735,47 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
     //do a step in the simulation
     FlightStep(flockPtr);
     
-	t_jit_err err=JIT_ERR_NONE;
+    t_jit_err err=JIT_ERR_NONE;
     long out_savelock, out2_savelock, out3_savelock, out4_savelock; //if there is a problem, saves and locks the output matricies
     t_jit_matrix_info out_minfo, out2_minfo, out3_minfo, out4_minfo;
     char *out_bp, *out2_bp, *out3_bp, *out4_bp;
-	long i,dimcount,planecount,dim[JIT_MATRIX_MAX_DIMCOUNT]; //dimensions and planes for the first output matrix
+    long i,dimcount,planecount,dim[JIT_MATRIX_MAX_DIMCOUNT]; //dimensions and planes for the first output matrix
     void *out_matrix, *out2_matrix, *out3_matrix, *out4_matrix;
-	
-	out_matrix 	= jit_object_method(outputs,_jit_sym_getindex,0);
-    out2_matrix 	= jit_object_method(outputs,_jit_sym_getindex,1);
+    
+    out_matrix = jit_object_method(outputs,_jit_sym_getindex,0);
+    out2_matrix = jit_object_method(outputs,_jit_sym_getindex,1);
     out3_matrix     = jit_object_method(outputs, _jit_sym_getindex, 2);
     out4_matrix     = jit_object_method(outputs, _jit_sym_getindex, 3);
     
-	if (flockPtr&&out_matrix&&out2_matrix&&out3_matrix) {
-		out_savelock = (long) jit_object_method(out_matrix,_jit_sym_lock,1);
+    if (flockPtr&&out_matrix&&out2_matrix&&out3_matrix) {
+        out_savelock = (long) jit_object_method(out_matrix,_jit_sym_lock,1);
         out2_savelock = (long) jit_object_method(out2_matrix,_jit_sym_lock,1);
         out3_savelock = (long) jit_object_method(out3_matrix, _jit_sym_lock,1);
         out4_savelock = (long) jit_object_method(out4_matrix, _jit_sym_lock,1);
-		
-		jit_object_method(out_matrix,_jit_sym_getinfo,&out_minfo); //assign the out_infos to their cooresponding out matrix
+        
+        jit_object_method(out_matrix,_jit_sym_getinfo,&out_minfo); //assign the out_infos to their cooresponding out matrix
         jit_object_method(out2_matrix,_jit_sym_getinfo,&out2_minfo);
         jit_object_method(out3_matrix,_jit_sym_getinfo, &out3_minfo);
         jit_object_method(out4_matrix,_jit_sym_getinfo, &out4_minfo);
-		
+        
         int numBoids = CalcNumBoids(flockPtr);
         
         //dimensions of the output matrix (number of boids x 1)
         out_minfo.dim[0] = numBoids;
-		out_minfo.dim[1] = 1;
-		out_minfo.type = _jit_sym_float32; //outputting floating point numbers
+        out_minfo.dim[1] = 1;
+        out_minfo.type = _jit_sym_float32; //outputting floating point numbers
         
         //(number of flocks x 1)
         out2_minfo.dim[0] = MAX_FLOCKS;
-		out2_minfo.dim[1] = 1;
-		out2_minfo.type = _jit_sym_float32; //outputting floating point numbers
+        out2_minfo.dim[1] = 1;
+        out2_minfo.type = _jit_sym_float32; //outputting floating point numbers
         out2_minfo.planecount = 1;
         
         //dimensions of attractor output matrix (number of attractors x 1)
         out3_minfo.dim[0] = flockPtr->numAttractors;
         out3_minfo.dim[1] = 1;
         out3_minfo.type = _jit_sym_float32; //outputting floating point numbers
-        out3_minfo.planecount = 4; //xyz, id
+        out3_minfo.planecount = 5; //xyz, id, attractorWeight
         
         //dimensions of the neighborhood line connecting matrix
         out4_minfo.dim[0] = kMaxNeighborLines;
@@ -780,32 +784,32 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
         out4_minfo.planecount = 7;
         
         //output the correct mode
-		switch(flockPtr->mode) { // newpos
-			case 0:
-				out_minfo.planecount = 4;
+        switch(flockPtr->mode) { // newpos
+            case 0:
+                out_minfo.planecount = 4;
                 break;
-			case 1: //newpos + oldpos
-				out_minfo.planecount = 7;
+            case 1: //newpos + oldpos
+                out_minfo.planecount = 7;
                 break;
-			case 2:	//newpos +  oldpos + speed-azimuth-elevation
-				out_minfo.planecount = 10;
+            case 2://newpos +  oldpos + speed-azimuth-elevation
+                out_minfo.planecount = 10;
                 break;
-		}
-		
+        }
+        
         //for some reason, 2 of these in a row are required
-		jit_object_method(out_matrix,_jit_sym_setinfo,&out_minfo);
-		jit_object_method(out_matrix,_jit_sym_getinfo,&out_minfo);
+        jit_object_method(out_matrix,_jit_sym_setinfo,&out_minfo);
+        jit_object_method(out_matrix,_jit_sym_getinfo,&out_minfo);
         
         jit_object_method(out2_matrix,_jit_sym_setinfo,&out2_minfo);
-		jit_object_method(out2_matrix,_jit_sym_getinfo,&out2_minfo);
+        jit_object_method(out2_matrix,_jit_sym_getinfo,&out2_minfo);
         
         jit_object_method(out3_matrix,_jit_sym_setinfo,&out3_minfo);
         jit_object_method(out3_matrix,_jit_sym_getinfo,&out3_minfo);
         
         jit_object_method(out4_matrix,_jit_sym_setinfo,&out4_minfo);
         jit_object_method(out4_matrix,_jit_sym_getinfo,&out4_minfo);
-		
-		jit_object_method(out_matrix,_jit_sym_getdata,&out_bp);
+        
+        jit_object_method(out_matrix,_jit_sym_getdata,&out_bp);
         jit_object_method(out2_matrix,_jit_sym_getdata,&out2_bp);
         jit_object_method(out3_matrix,_jit_sym_getdata,&out3_bp);
         jit_object_method(out4_matrix,_jit_sym_getdata,&out4_bp);
@@ -831,8 +835,9 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
             out3_data[1] = iterator->loc[1];
             out3_data[2] = iterator->loc[2];
             out3_data[3] = iterator->id;
-        
-            out3_data += 4; //planecount
+            out3_data[4] = iterator->attractorWeight;
+            
+            out3_data += 5; //planecount
             
             iterator=iterator->nextAttractor;
         }
@@ -876,35 +881,34 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
         
         for (i=0;i<dimcount;i++) {
             dim[i] = out_minfo.dim[i];
-		}
+        }
         
         //populate the first outlet matrix with data
-		jit_boids3d_calculate_ndim(flockPtr, dimcount, dim, planecount, &out_minfo, out_bp);
+        jit_boids3d_calculate_ndim(flockPtr, dimcount, dim, planecount, &out_minfo, out_bp);
         
-	} else {
-		return JIT_ERR_INVALID_PTR;
-	}
-	
+    } else {
+        return JIT_ERR_INVALID_PTR;
+    }
+    
 out: //output the matrix
-	jit_object_method(out_matrix,gensym("lock"),out_savelock);
-	return err;
+    jit_object_method(out_matrix,gensym("lock"),out_savelock);
+    return err;
 }
 
-
 /*
-    Populates the first outlet matrix with the data (boids x,y,z etc)
+ Populates the first outlet matrix with the data (boids x,y,z etc)
  */
 void jit_boids3d_calculate_ndim(t_jit_boids3d *flockPtr, long dimcount, long *dim, long planecount,
                                 t_jit_matrix_info *out_minfo, char *bop)
 {
     
-	float *fop;
-	double 	tempNew_x, tempNew_y, tempNew_z;
-	double 	tempOld_x, tempOld_y, tempOld_z;
-	double	delta_x, delta_y, delta_z, azi, ele, speed;
-	
-	fop = (float *)bop; //contains the data
-	
+    float *fop;
+    double 	tempNew_x, tempNew_y, tempNew_z;
+    double 	tempOld_x, tempOld_y, tempOld_z;
+    double	delta_x, delta_y, delta_z, azi, ele, speed;
+    
+    fop = (float *)bop; //contains the data
+    
     //pick the correct mode (to get the appropriate number of planes)
     switch(flockPtr->mode) { // newpos
         case 0:
@@ -990,7 +994,7 @@ void jit_boids3d_calculate_ndim(t_jit_boids3d *flockPtr, long dimcount, long *di
 
 
 /*
-    Calculates each boid's new velocity and updates position
+ Calculates each boid's new velocity and updates position
  */
 void FlightStep(t_jit_boids3d *flockPtr)
 {
@@ -1086,7 +1090,7 @@ void FlightStep(t_jit_boids3d *flockPtr)
             else
                 iterator->speed = flockPtr->minspeed[flockID];
             
-
+            
             
             //bounce back from walls if the boid is beyond the limit of the flyrect
             AvoidWalls(flockPtr, iterator, iterator->newDir);
@@ -1107,7 +1111,7 @@ void FlightStep(t_jit_boids3d *flockPtr)
 
 /*
  Calculates the center of a flock, saves it in flockPtr->centerPt. Also computes avoid and matching of neighbor velocities
-    >This is a method that is a combo of what was previously FindFlockCenter() and MatchAndAvoidNeighbors(), because both involve calculating the neighbors of a boid
+ >This is a method that is a combo of what was previously FindFlockCenter() and MatchAndAvoidNeighbors(), because both involve calculating the neighbors of a boid
  
  TODO: possible optimization = if we're only allowing boids from same flock, only calculate the center once for each flock
  TODO: avoidSpeed is never used
@@ -1186,7 +1190,7 @@ void CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, dou
                     flockPtr->sizeOfNeighborhoodConnections++;
                     
                 }
-    
+                
                 neighborsCount++;
                 
             }else if(dist == 0.0 && iterator->flockID == theBoid->flockID){
@@ -1217,46 +1221,36 @@ void CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, dou
 
 
 /*
-    Calculates a new seek direction to a point
+ Calculates a new seek direction to a point
  */
 void SeekPoint(t_jit_boids3d *flockPtr, BoidPtr theBoid, double *seekPt, double* seekDir)
 {
-	seekDir[x] = seekPt[x] - theBoid->oldPos[x];
-	seekDir[y] = seekPt[y] - theBoid->oldPos[y];
-	seekDir[z] = seekPt[z] - theBoid->oldPos[z];
-	NormalizeVelocity(seekDir);
+    seekDir[x] = seekPt[x] - theBoid->oldPos[x];
+    seekDir[y] = seekPt[y] - theBoid->oldPos[y];
+    seekDir[z] = seekPt[z] - theBoid->oldPos[z];
+    NormalizeVelocity(seekDir);
 }
 
 
 /*
-    Calculates a new seek direction for all attractors
-        >TODO: not sure if this works
+ Calculates a new seek direction for all attractors
+ >TODO: not sure if this works
  */
 void SeekAttractors(t_jit_boids3d *flockPtr, BoidPtr theBoid, double* seekDir)
 {
-    double closestDir[3] = {0.0, 0.0, 0.0};
-    double closestDist = DBL_MAX;
     AttractorPtr iterator = flockPtr->attractorLL;
     
     //iterate thru and sum up the direction to all attractors
     while(iterator){
         
-        double dist = DistSqrToPt(iterator->loc, theBoid->oldPos);
-        if(dist < closestDist){
-            closestDist = dist;
-            closestDir[0] = iterator->loc[0];
-            closestDir[1] = iterator->loc[1];
-            closestDir[2] = iterator->loc[2];
+        double dist = sqrt(DistSqrToPt(iterator->loc, theBoid->oldPos));
+        if(dist < iterator->attractorWeight){
+            seekDir[x] += iterator->loc[x]-theBoid->oldPos[x];
+            seekDir[y] += iterator->loc[y]-theBoid->oldPos[y];
+            seekDir[z] += iterator->loc[z]-theBoid->oldPos[z];
         }
         
         iterator = iterator->nextAttractor;
-    }
-    
-    //update seekDir
-    if(closestDist != DBL_MAX){
-        seekDir[0] = closestDir[0] - theBoid->oldPos[0];
-        seekDir[1] = closestDir[1] - theBoid->oldPos[1];
-        seekDir[2] = closestDir[2] - theBoid->oldPos[2];
     }
     
     NormalizeVelocity(seekDir);
@@ -1264,52 +1258,52 @@ void SeekAttractors(t_jit_boids3d *flockPtr, BoidPtr theBoid, double* seekDir)
 
 
 /*
-    Bounces a boid back from the edges of the flyrect if necessary
+ Bounces a boid back from the edges of the flyrect if necessary
  */
 void AvoidWalls(t_jit_boids3d *flockPtr, BoidPtr theBoid, double *wallVel)
 {
-	double		testPoint[3];
+    double		testPoint[3];
     
     //	wallVel[x] = 0.0;
     //	wallVel[y] = 0.0;
     //	wallVel[z] = 0.0;
     
-	/* calculate test point in front of the nose of the boid */
-	/* distance depends on the boid's speed and the avoid edge constant */
-	testPoint[x] = theBoid->oldPos[x] + theBoid->newDir[x] * (theBoid->speed * (flockPtr->speed[theBoid->flockID] / 100.0));// * flockPtr->edgedist[flockPtr->boid[theBoid].flockID];
+    /* calculate test point in front of the nose of the boid */
+    /* distance depends on the boid's speed and the avoid edge constant */
+    testPoint[x] = theBoid->oldPos[x] + theBoid->newDir[x] * (theBoid->speed * (flockPtr->speed[theBoid->flockID] / 100.0));// * flockPtr->edgedist[flockPtr->boid[theBoid].flockID];
     testPoint[y] = theBoid->oldPos[y] + theBoid->newDir[y] * (theBoid->speed * (flockPtr->speed[theBoid->flockID] / 100.0));// * flockPtr->edgedist[flockPtr->boid[theBoid].flockID];
     testPoint[z] = theBoid->oldPos[z] + theBoid->newDir[z] * (theBoid->speed * (flockPtr->speed[theBoid->flockID] / 100.0));// * flockPtr->edgedist[flockPtr->boid[theBoid].flockID];
     
     
-	/* if test point is out of the left (right) side of flockPtr->flyrect, */
-	/* return a positive (negative) horizontal velocity component */
-	if (testPoint[x] < flockPtr->flyrect[left]*kFlyRectScalingFactor)
-		wallVel[x] = ABS(wallVel[x]);
-	else if (testPoint[x] > flockPtr->flyrect[right]*kFlyRectScalingFactor)
-		wallVel[x] = - ABS(wallVel[x]);
+    /* if test point is out of the left (right) side of flockPtr->flyrect, */
+    /* return a positive (negative) horizontal velocity component */
+    if (testPoint[x] < flockPtr->flyrect[left]*kFlyRectScalingFactor)
+        wallVel[x] = ABS(wallVel[x]);
+    else if (testPoint[x] > flockPtr->flyrect[right]*kFlyRectScalingFactor)
+        wallVel[x] = - ABS(wallVel[x]);
     
-	/* same with top and bottom */
-	if (testPoint[y] > flockPtr->flyrect[top]*kFlyRectScalingFactor)
-		wallVel[y] = - ABS(wallVel[y]);
-	else if (testPoint[y] < flockPtr->flyrect[bottom]*kFlyRectScalingFactor)
-		wallVel[y] = ABS(wallVel[y]);
+    /* same with top and bottom */
+    if (testPoint[y] > flockPtr->flyrect[top]*kFlyRectScalingFactor)
+        wallVel[y] = - ABS(wallVel[y]);
+    else if (testPoint[y] < flockPtr->flyrect[bottom]*kFlyRectScalingFactor)
+        wallVel[y] = ABS(wallVel[y]);
     
-	/* same with front and back*/
-	if (testPoint[z] > flockPtr->flyrect[front]*kFlyRectScalingFactor)
-		wallVel[z] = - ABS(wallVel[z]);
-	else if (testPoint[z] < flockPtr->flyrect[back]*kFlyRectScalingFactor)
-		wallVel[z] = ABS(wallVel[z]);
+    /* same with front and back*/
+    if (testPoint[z] > flockPtr->flyrect[front]*kFlyRectScalingFactor)
+        wallVel[z] = - ABS(wallVel[z]);
+    else if (testPoint[z] < flockPtr->flyrect[back]*kFlyRectScalingFactor)
+        wallVel[z] = ABS(wallVel[z]);
 }
 
 
 /*
-    Determines if a neighbor boid is in front of another boid
+ Determines if a neighbor boid is in front of another boid
  */
 char InFront(BoidPtr theBoid, BoidPtr neighbor)
 {
-	float	grad, intercept;
-	char result;
-	
+    float	grad, intercept;
+    char result;
+    
     /* we do this on 2 planes, xy, yz. if one returns false then we know its behind. a.sier/jasch 08/2005
      
      Find the gradient and y-intercept of a line passing through theBoid's oldPos
@@ -1319,137 +1313,137 @@ char InFront(BoidPtr theBoid, BoidPtr neighbor)
      their vertical coordinates.
      
      */
-	// xy plane
-	
-	// if theBoid is not travelling vertically...
-	if (theBoid->oldDir[x] != 0) {
-		// calculate gradient of a line _perpendicular_ to its direction (hence the minus)
-		grad = -theBoid->oldDir[y] / theBoid->oldDir[x];
-		
-		// calculate where this line hits the y axis (from y = mx + c)
-		intercept = theBoid->oldPos[y] - (grad * theBoid->oldPos[x]);
+    // xy plane
+    
+    // if theBoid is not travelling vertically...
+    if (theBoid->oldDir[x] != 0) {
+        // calculate gradient of a line _perpendicular_ to its direction (hence the minus)
+        grad = -theBoid->oldDir[y] / theBoid->oldDir[x];
         
-		/* compare the horizontal position of the neighbor boid with */
-		/* the point on the line that has its vertical coordinate */
-		if (neighbor->oldPos[x] >= ((neighbor->oldPos[y] - intercept) / grad)) {
-			/* return true if the first boid's horizontal movement is +ve */
-			result = (theBoid->oldDir[x] > 0);
+        // calculate where this line hits the y axis (from y = mx + c)
+        intercept = theBoid->oldPos[y] - (grad * theBoid->oldPos[x]);
+        
+        /* compare the horizontal position of the neighbor boid with */
+        /* the point on the line that has its vertical coordinate */
+        if (neighbor->oldPos[x] >= ((neighbor->oldPos[y] - intercept) / grad)) {
+            /* return true if the first boid's horizontal movement is +ve */
+            result = (theBoid->oldDir[x] > 0);
             
-			if (result==0) return 0;
-			else goto next;
-			
-		} else {
-			/* return true if the first boid's horizontal movement is +ve */
-			result = (theBoid->oldDir[x] < 0);
-			if (result==0) return 0;
-			else goto next;
-		}
-	}
-	/* else theBoid is travelling vertically, so just compare vertical coordinates */
-	else if (theBoid->oldDir[y] > 0) {
-		result = (neighbor->oldPos[y] > theBoid->oldPos[y]);
-		if (result==0){
-			return 0;
-		}else{
-			goto next;
-		}
-	}else{
-		result = (neighbor->oldPos[y] < theBoid->oldPos[y]);
-		if (result==0){
-			return 0;
-		} else {
-			goto next;
-		}
-	}
+            if (result==0) return 0;
+            else goto next;
+            
+        } else {
+            /* return true if the first boid's horizontal movement is +ve */
+            result = (theBoid->oldDir[x] < 0);
+            if (result==0) return 0;
+            else goto next;
+        }
+    }
+    /* else theBoid is travelling vertically, so just compare vertical coordinates */
+    else if (theBoid->oldDir[y] > 0) {
+        result = (neighbor->oldPos[y] > theBoid->oldPos[y]);
+        if (result==0){
+            return 0;
+        }else{
+            goto next;
+        }
+    }else{
+        result = (neighbor->oldPos[y] < theBoid->oldPos[y]);
+        if (result==0){
+            return 0;
+        } else {
+            goto next;
+        }
+    }
 next:
     
-	// yz plane
-	
-	// if theBoid is not travelling vertically...
-	if (theBoid->oldDir[y] != 0) {
-		// calculate gradient of a line _perpendicular_ to its direction (hence the minus)
-		grad = -theBoid->oldDir[z] / theBoid->oldDir[y];
-		
-		// calculate where this line hits the y axis (from y = mx + c)
-		intercept = theBoid->oldPos[z] - (grad * theBoid->oldPos[y]);
+    // yz plane
+    
+    // if theBoid is not travelling vertically...
+    if (theBoid->oldDir[y] != 0) {
+        // calculate gradient of a line _perpendicular_ to its direction (hence the minus)
+        grad = -theBoid->oldDir[z] / theBoid->oldDir[y];
         
-		// compare the horizontal position of the neighbor boid with
-		// the point on the line that has its vertical coordinate
-		if (neighbor->oldPos[y] >= ((neighbor->oldPos[z] - intercept) / grad)) {
-			// return true if the first boid's horizontal movement is +ve
-			result = (theBoid->oldDir[y] > 0);
-			if (result==0){
-				return 0;
-			}else{
-				goto next2;
-			}
-		} else {
-			// return true if the first boid's horizontal movement is +ve
-			result = (theBoid->oldDir[y] < 0);
-			if (result==0){
-				return 0;
-			}else{
-				goto next2;
-			}
-		}
-	}
-	// else theBoid is travelling vertically, so just compare vertical coordinates
-	else if (theBoid->oldDir[z] > 0) {
-		result = (neighbor->oldPos[z] > theBoid->oldPos[z]);
-		if (result==0){
-			return 0;
-		}else{
-			goto next2;
-		}
-	}else{
-		result = (neighbor->oldPos[z] < theBoid->oldPos[z]);
-		if (result==0){
-			return 0;
-		}else{
-			goto next2;
-		}
-	}
+        // calculate where this line hits the y axis (from y = mx + c)
+        intercept = theBoid->oldPos[z] - (grad * theBoid->oldPos[y]);
+        
+        // compare the horizontal position of the neighbor boid with
+        // the point on the line that has its vertical coordinate
+        if (neighbor->oldPos[y] >= ((neighbor->oldPos[z] - intercept) / grad)) {
+            // return true if the first boid's horizontal movement is +ve
+            result = (theBoid->oldDir[y] > 0);
+            if (result==0){
+                return 0;
+            }else{
+                goto next2;
+            }
+        } else {
+            // return true if the first boid's horizontal movement is +ve
+            result = (theBoid->oldDir[y] < 0);
+            if (result==0){
+                return 0;
+            }else{
+                goto next2;
+            }
+        }
+    }
+    // else theBoid is travelling vertically, so just compare vertical coordinates
+    else if (theBoid->oldDir[z] > 0) {
+        result = (neighbor->oldPos[z] > theBoid->oldPos[z]);
+        if (result==0){
+            return 0;
+        }else{
+            goto next2;
+        }
+    }else{
+        result = (neighbor->oldPos[z] < theBoid->oldPos[z]);
+        if (result==0){
+            return 0;
+        }else{
+            goto next2;
+        }
+    }
 next2:
-	return 1;
+    return 1;
 }
 
 void NormalizeVelocity(double *direction)
 {
-	float	hypot;
-	
-	hypot = jit_math_sqrt(direction[x] * direction[x] + direction[y] * direction[y] + direction[z] * direction[z] );
+    float	hypot;
     
-	if (hypot != 0.0) {
-		direction[x] = direction[x] / hypot;
-		direction[y] = direction[y] / hypot;
-		direction[z] = direction[z] / hypot;
-	}
+    hypot = jit_math_sqrt(direction[x] * direction[x] + direction[y] * direction[y] + direction[z] * direction[z] );
+    
+    if (hypot != 0.0) {
+        direction[x] = direction[x] / hypot;
+        direction[y] = direction[y] / hypot;
+        direction[z] = direction[z] / hypot;
+    }
 }
 
 //Returns a random integer in a range
 double RandomInt(double minRange, double maxRange)
 {
-	double	t, result;
-	
-	t = (double)(jit_rand() & 0x0000FFFF)/(double)(0x0000FFFF);
+    double	t, result;
     
-	result = (t * (maxRange - minRange)) + minRange;
-	return(result);
+    t = (double)(jit_rand() & 0x0000FFFF)/(double)(0x0000FFFF);
+    
+    result = (t * (maxRange - minRange)) + minRange;
+    return(result);
 }
 
 double DistSqrToPt(double *firstPoint, double *secondPoint)
 {
-	double	a, b,c;
-	a = firstPoint[x] - secondPoint[x];
-	b = firstPoint[y] - secondPoint[y];
-	c = firstPoint[z] - secondPoint[z];
-	return(a * a + b * b + c * c);
+    double	a, b,c;
+    a = firstPoint[x] - secondPoint[x];
+    b = firstPoint[y] - secondPoint[y];
+    c = firstPoint[z] - secondPoint[z];
+    return(a * a + b * b + c * c);
 }
 
 
 /*
-    Initializes everthing related to the flocks
-        >also initializes the boids linked list for each flock
+ Initializes everthing related to the flocks
+ >also initializes the boids linked list for each flock
  */
 void InitFlock(t_jit_boids3d *flockPtr)
 {
@@ -1579,7 +1573,7 @@ NeighborLinePtr InitNeighborhoodLine(t_jit_boids3d *flockPtr, BoidPtr theBoid, B
 
 
 /*
-    Allocates memory for a Boid struct and returns a pointer to it
+ Allocates memory for a Boid struct and returns a pointer to it
  */
 BoidPtr InitBoid(t_jit_boids3d *flockPtr)
 {
@@ -1610,9 +1604,9 @@ BoidPtr InitBoid(t_jit_boids3d *flockPtr)
     
     theBoid->speed = 0.0;
     
-//    theBoid->newPos[x] = theBoid->oldPos[x] = (kFlyRectScalingFactor*RandomInt(flockPtr->flyrect[right],flockPtr->flyrect[left]));		// set random location within flyrect
-//    theBoid->newPos[y] = theBoid->oldPos[y] = (kFlyRectScalingFactor*RandomInt(flockPtr->flyrect[bottom], flockPtr->flyrect[top]));
-//    theBoid->newPos[z] = theBoid->oldPos[z] = (kFlyRectScalingFactor*RandomInt(flockPtr->flyrect[back], flockPtr->flyrect[front]));
+    //    theBoid->newPos[x] = theBoid->oldPos[x] = (kFlyRectScalingFactor*RandomInt(flockPtr->flyrect[right],flockPtr->flyrect[left]));		// set random location within flyrect
+    //    theBoid->newPos[y] = theBoid->oldPos[y] = (kFlyRectScalingFactor*RandomInt(flockPtr->flyrect[bottom], flockPtr->flyrect[top]));
+    //    theBoid->newPos[z] = theBoid->oldPos[z] = (kFlyRectScalingFactor*RandomInt(flockPtr->flyrect[back], flockPtr->flyrect[front]));
     
     //set the boids position to be birthLoc
     theBoid->newPos[x] = theBoid->oldPos[x] = flockPtr->birthLoc[x];
@@ -1635,7 +1629,7 @@ BoidPtr InitBoid(t_jit_boids3d *flockPtr)
 
 
 /*
-    Mallocs memory for an attractor and returns a pointer to it
+ Mallocs memory for an attractor and returns a pointer to it
  */
 AttractorPtr InitAttractor(t_jit_boids3d *flockPtr)
 {
@@ -1650,38 +1644,40 @@ AttractorPtr InitAttractor(t_jit_boids3d *flockPtr)
     theAttractor->loc[1] = 0.0;
     theAttractor->loc[2] = 0.0;
     
+    theAttractor->attractorWeight = 0.0;
+    
     return theAttractor;
 }
 
 
 /*
-    Do initialization on startup of the jitter object
+ Do initialization on startup of the jitter object
  */
 t_jit_boids3d *jit_boids3d_new(void)
 {
-	t_jit_boids3d *flockPtr;
+    t_jit_boids3d *flockPtr;
     
-	if ((flockPtr=(t_jit_boids3d *)jit_object_alloc(_jit_boids3d_class))) {
-		
-		flockPtr->flyRectCount		= 6;
-		//flockPtr->attractPtCount	= 1;
-		flockPtr->mode	 			= 0;
-		
-		//init boids params
-		InitFlock(flockPtr);
-		
-		flockPtr->d2r = 3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117068/180.0;
-		flockPtr->r2d = 180.0/3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117068;
-	} else {
-		flockPtr = NULL;
-	}
-	return flockPtr;
+    if ((flockPtr=(t_jit_boids3d *)jit_object_alloc(_jit_boids3d_class))) {
+        
+        flockPtr->flyRectCount		= 6;
+        //flockPtr->attractPtCount	= 1;
+        flockPtr->mode	 			= 0;
+        
+        //init boids params
+        InitFlock(flockPtr);
+        
+        flockPtr->d2r = 3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117068/180.0;
+        flockPtr->r2d = 180.0/3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117068;
+    } else {
+        flockPtr = NULL;
+    }
+    return flockPtr;
 }
 
 
 /*
  Free the linked lists containing all the boids
-    >NOTE: this replaces the previous method: jit_boids3d_free
+ >NOTE: this replaces the previous method: jit_boids3d_free
  */
 void freeFlocks(t_jit_boids3d *flockPtr)
 {
