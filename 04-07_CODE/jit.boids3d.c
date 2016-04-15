@@ -704,7 +704,7 @@ t_jit_err jit_boids3d_stats(t_jit_boids3d *flockPtr, void *attr, long argc, t_at
         post("Attractors:");
         AttractorPtr iterator = flockPtr->attractorLL;
         while(iterator){
-            post("   ID: %d,  Location: (%f, %f, %f), Strength: %f", iterator->id, iterator->loc[x], iterator->loc[y], iterator->loc[z], iterator->attractorWeight);
+            post("   ID: %d,  Location: (%0.2f, %0.2f, %0.2f), Strength: %0.2f", iterator->id, iterator->loc[x], iterator->loc[y], iterator->loc[z], iterator->attractorWeight);
             iterator = iterator->nextAttractor;
         }
     }else{
@@ -712,7 +712,10 @@ t_jit_err jit_boids3d_stats(t_jit_boids3d *flockPtr, void *attr, long argc, t_at
     }
     
     //birth location
-    post("Birth Location: (%f, %f, %f)", flockPtr->birthLoc[x], flockPtr->birthLoc[y], flockPtr->birthLoc[z]);
+    post("Birth Location: (%0.2f, %0.2f, %0.2f)", flockPtr->birthLoc[x], flockPtr->birthLoc[y], flockPtr->birthLoc[z]);
+    
+    //neighbor connections
+    post("Number of Neighbor Lines: %d/%d", flockPtr->sizeOfNeighborhoodConnections, kMaxNeighborLines);
     
     post("- - - - - - -");
     
