@@ -750,7 +750,7 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
     out3_matrix     = jit_object_method(outputs, _jit_sym_getindex, 2);
     out4_matrix     = jit_object_method(outputs, _jit_sym_getindex, 3);
     
-    if (flockPtr&&out_matrix&&out2_matrix&&out3_matrix) {
+    if (flockPtr&&out_matrix&&out2_matrix&&out3_matrix&&out4_matrix) {
         out_savelock = (long) jit_object_method(out_matrix,_jit_sym_lock,1);
         out2_savelock = (long) jit_object_method(out2_matrix,_jit_sym_lock,1);
         out3_savelock = (long) jit_object_method(out3_matrix, _jit_sym_lock,1);
