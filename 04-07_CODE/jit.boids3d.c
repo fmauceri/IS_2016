@@ -1474,6 +1474,10 @@ void InitFlock(t_jit_boids3d *flockPtr)
     //Flock specific initialization
     for(int i=0; i<MAX_FLOCKS; i++){
         
+        if (kNumBoids == 0) { //to avoid crashing problem
+            continue;
+        }
+        
         //create the linked list
         BoidPtr newLL = InitLL(flockPtr, kNumBoids, i);
         //TODO: error checking here breaks the external
