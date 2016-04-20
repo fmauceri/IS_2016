@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 34.0, 79.0, 1303.0, 833.0 ],
+		"rect" : [ 75.0, 79.0, 1405.0, 887.0 ],
 		"bgcolor" : [ 0.847059, 0.854902, 0.870588, 1.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
@@ -38,6 +38,35 @@
 		"style" : "",
 		"subpatcher_template" : "",
 		"boxes" : [ 			{
+				"box" : 				{
+					"id" : "obj-189",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "jit_matrix", "" ],
+					"patching_rect" : [ 705.0, 490.333374, 121.0, 22.0 ],
+					"style" : "",
+					"text" : "jit.change @thresh 0"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-176",
+					"linecount" : 14,
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 1957.249878, 692.677124, 499.750122, 194.0 ],
+					"presentation" : 1,
+					"presentation_linecount" : 20,
+					"presentation_rect" : [ 995.0, 535.166687, 220.0, 275.0 ],
+					"style" : "",
+					"text" : "Notes on Preset Settings: (Work in Progess)\n\n- The 1st row involve large numbers of boids, the second row involves smaller numbers.\n\n- #2 has distinct flocks interacting\n\n- #12 has a flock imitating another (add an attractor with a large radius)\n\n- #22 has interesting clustering\n\n- #32 exhibits 'chase' behavior\n\n- #42 has intesting orbiting / switching properities (add 2 attractors that are separated from each other and have a large radius)"
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"id" : "obj-191",
 					"maxclass" : "newobj",
@@ -472,11 +501,11 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 692.5, 567.666748, 150.0, 20.0 ],
+					"patching_rect" : [ 822.249939, 17.666748, 150.0, 20.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 676.783325, 568.666748, 55.0, 20.0 ],
+					"presentation_rect" : [ 679.283325, 568.666748, 55.0, 20.0 ],
 					"style" : "",
-					"text" : "Strength"
+					"text" : "Radius"
 				}
 
 			}
@@ -486,7 +515,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 645.5, 570.666748, 150.0, 20.0 ],
+					"patching_rect" : [ 775.249939, 20.666748, 150.0, 20.0 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 642.5, 568.666748, 18.0, 20.0 ],
 					"style" : "",
@@ -500,7 +529,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 589.0, 572.666748, 150.0, 20.0 ],
+					"patching_rect" : [ 718.749939, 22.666748, 150.0, 20.0 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 590.5, 568.666748, 18.0, 20.0 ],
 					"style" : "",
@@ -514,7 +543,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 549.0, 575.0, 150.0, 20.0 ],
+					"patching_rect" : [ 678.749939, 25.0, 150.0, 20.0 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 538.0, 568.666748, 18.0, 20.0 ],
 					"style" : "",
@@ -609,7 +638,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 224.0, 174.0, 150.0, 33.0 ],
+					"patching_rect" : [ 678.749939, 57.875, 150.0, 33.0 ],
 					"presentation" : 1,
 					"presentation_linecount" : 2,
 					"presentation_rect" : [ 164.5, 151.236465, 90.0, 33.0 ],
@@ -624,7 +653,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 76.0, 169.0, 150.0, 20.0 ],
+					"patching_rect" : [ 678.749939, 57.875, 150.0, 20.0 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 78.75, 153.236465, 76.0, 20.0 ],
 					"style" : "",
@@ -1240,14 +1269,13 @@
 , 											{
 												"box" : 												{
 													"id" : "obj-72",
-													"linecount" : 2,
 													"maxclass" : "message",
 													"numinlets" : 2,
 													"numoutlets" : 1,
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 252.333374, 233.5, 50.0, 22.0 ],
 													"style" : "",
-													"text" : "1 2 3 4 5"
+													"text" : "2 3 4 5"
 												}
 
 											}
@@ -1312,7 +1340,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 50.0, 172.5, 50.0, 22.0 ],
 													"style" : "",
-													"text" : "0."
+													"text" : "1. 0."
 												}
 
 											}
@@ -4728,7 +4756,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 532.0, 251.5, 60.0, 22.0 ],
 													"style" : "",
-													"text" : "bang"
+													"text" : "-5. -5. -5."
 												}
 
 											}
@@ -5342,7 +5370,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 532.0, 251.5, 60.0, 22.0 ],
 													"style" : "",
-													"text" : "0. 0. 0."
+													"text" : "5. 5. 5."
 												}
 
 											}
@@ -6199,7 +6227,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 299.5, 196.0, 50.0, 22.0 ],
 													"style" : "",
-													"text" : "0."
+													"text" : "1. 0."
 												}
 
 											}
@@ -6225,7 +6253,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 238.5, 196.0, 55.0, 22.0 ],
 													"style" : "",
-													"text" : "0."
+													"text" : "-5. 5."
 												}
 
 											}
@@ -6251,7 +6279,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 179.5, 196.0, 53.0, 22.0 ],
 													"style" : "",
-													"text" : "0."
+													"text" : "-5. 5."
 												}
 
 											}
@@ -6277,7 +6305,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 123.5, 196.0, 76.0, 22.0 ],
 													"style" : "",
-													"text" : "0."
+													"text" : "-5. 5."
 												}
 
 											}
@@ -6304,7 +6332,7 @@
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 53.0, 189.0, 50.0, 62.0 ],
 													"style" : "",
-													"text" : "jit_matrix u947000367"
+													"text" : "jit_matrix u683000373"
 												}
 
 											}
@@ -8375,7 +8403,7 @@
 					"numinlets" : 0,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 1245.333252, 663.124939, 95.0, 22.0 ],
+					"patching_rect" : [ 1249.0, 578.666626, 95.0, 22.0 ],
 					"style" : "",
 					"text" : "r attractorMatrix"
 				}
@@ -8388,7 +8416,7 @@
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 673.333313, 495.833374, 97.0, 22.0 ],
+					"patching_rect" : [ 705.0, 518.833374, 97.0, 22.0 ],
 					"style" : "",
 					"text" : "s attractorMatrix"
 				}
@@ -8704,7 +8732,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 777.666626, 443.833374, 137.0, 74.0 ],
+					"patching_rect" : [ 850.333313, 425.000061, 137.0, 74.0 ],
 					"style" : "",
 					"text" : "third outlet : attractors\nplane 0:X\nplane1: Y\nplane 2: Z\nplane 3: ID\n"
 				}
@@ -8843,7 +8871,7 @@
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 850.333313, 609.0, 50.0, 22.0 ],
 					"style" : "",
-					"text" : "60."
+					"text" : "35."
 				}
 
 			}
@@ -9605,7 +9633,7 @@
 			}
 , 			{
 				"box" : 				{
-					"cols" : 400,
+					"cols" : 2,
 					"fontface" : 0,
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
@@ -9614,7 +9642,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 4,
 					"outlettype" : [ "list", "", "", "" ],
-					"patching_rect" : [ 1024.0, 708.354187, 565.0, 162.645813 ],
+					"patching_rect" : [ 1050.0, 725.333374, 565.0, 162.645813 ],
 					"rows" : 1
 				}
 
@@ -9654,7 +9682,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 679.249939, 300.166687, 293.0, 42.0 ],
+					"patching_rect" : [ 678.749939, 322.166687, 293.0, 42.0 ],
 					"style" : "",
 					"text" : "Call boids external and use boid matrix to generate drawing commands"
 				}
@@ -9667,7 +9695,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 740.5, 530.5, 154.0, 33.0 ],
+					"patching_rect" : [ 833.333313, 567.666626, 154.0, 33.0 ],
 					"style" : "",
 					"text" : "Colors the boids based on flock ID"
 				}
@@ -9723,7 +9751,7 @@
 					"patching_rect" : [ 1671.0, 656.624939, 151.0, 355.0 ],
 					"presentation" : 1,
 					"presentation_linecount" : 26,
-					"presentation_rect" : [ 945.0, 109.236465, 151.0, 355.0 ],
+					"presentation_rect" : [ 940.0, 108.755737, 151.0, 355.0 ],
 					"style" : "",
 					"text" : "MODE 0 [Default]:\nPlane 0: X New Position\nPlane 1: Y New Position\nPlane 2: Z New Position\nPlane 3: FlockID\n\nMODE 1:\nPlane 0: X New Position\nPlane 1: Y New Position\nPlane 2: Z New Position\nPlane 3: FlockID\nPlane 4: X Old Position\nPlane 5: Y Old Position\nPlane 6: Z Old Position\n\nMODE 2:\nPlane 0: X New Position\nPlane 1: Y New Position\nPlane 2: Z New Position\nPlane 3: FlockID\nPlane 4: X Old Position\nPlane 5: Y Old Position\nPlane 6: Z Old Position\nPlane 7: Speed\nPlane 8: Azimuth\nPlane 9: Elevation\n"
 				}
@@ -11522,7 +11550,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 362.75, 250.5, 50.0, 22.0 ],
 									"style" : "",
-									"text" : "60."
+									"text" : "35."
 								}
 
 							}
@@ -11536,7 +11564,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 479.0, 154.0, 62.0, 62.0 ],
 									"style" : "",
-									"text" : "boidCount 0. 20. 0. 0. 20. 20."
+									"text" : "boidCount 0. 0. 0. 20. 15. 0."
 								}
 
 							}
@@ -11550,7 +11578,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 59.75, 506.0, 55.0, 62.0 ],
 									"style" : "",
-									"text" : "number 0. 0. 0. 0. 0. 0. 60."
+									"text" : "number 0. 0. 0. 0. 0. 0. 35."
 								}
 
 							}
@@ -12482,7 +12510,7 @@
 ,
 					"style" : "",
 					"text" : "autopattr",
-					"varname" : "u171000963"
+					"varname" : "u543000970"
 				}
 
 			}
@@ -18507,16 +18535,16 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-118",
-					"linecount" : 18,
+					"linecount" : 17,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 350.5, 8.5, 318.0, 248.0 ],
+					"patching_rect" : [ 350.5, 8.5, 318.0, 234.0 ],
 					"presentation" : 1,
 					"presentation_linecount" : 16,
 					"presentation_rect" : [ 40.0, 480.643616, 399.0, 221.0 ],
 					"style" : "",
-					"text" : "HOW TO USE (2016):\n\n1) Choose a preset or manually set up the flocks population and parameters. At least one flock needs to have an initial population.\n\n2) Click the X to run.\n\n3) Adjust the visual with eraseAlpha, scale, camera, and toggle the rotating universe if wanted.\n\n4) To the right, mode can be changed to show output differently. Also, default is set so boids interact with whole unvierse, but you can change it so it just interacts with its own flock.\n    >NOTE: mode has no impact on visuals or behavior -- can eventually be used for more features\n\n"
+					"text" : "HOW TO USE (2016):\n\n1) Choose a preset or manually set up the flocks population and parameters.\n\n2) Click the X to run.\n\n3) Adjust the visual with eraseAlpha, scale, camera, and toggle the rotating universe if wanted.\n\n4) To the right, mode can be changed to show output differently. Also, default is set so boids interact with whole unvierse, but you can change it so it just interacts with its own flock.\n    >NOTE: mode has no impact on visuals or behavior -- can eventually be used for more features\n\n"
 				}
 
 			}
@@ -20052,7 +20080,7 @@
 					"numinlets" : 0,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 816.333313, 565.5, 66.0, 22.0 ],
+					"patching_rect" : [ 764.333313, 573.166626, 66.0, 22.0 ],
 					"style" : "",
 					"text" : "r flockSize"
 				}
@@ -21164,7 +21192,7 @@
 					"mode" : 0,
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 270.0, 315.166626, 720.333252, 551.0 ],
+					"patching_rect" : [ 270.0, 308.666626, 720.333252, 551.0 ],
 					"proportion" : 0.39,
 					"style" : ""
 				}
@@ -21705,10 +21733,10 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-102", 0 ],
+					"destination" : [ "obj-82", 0 ],
 					"disabled" : 0,
 					"hidden" : 0,
-					"source" : [ "obj-19", 3 ]
+					"source" : [ "obj-189", 0 ]
 				}
 
 			}
@@ -21718,6 +21746,15 @@
 					"disabled" : 0,
 					"hidden" : 0,
 					"source" : [ "obj-19", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-189", 0 ],
+					"disabled" : 0,
+					"hidden" : 0,
+					"source" : [ "obj-19", 2 ]
 				}
 
 			}
@@ -21745,15 +21782,6 @@
 					"disabled" : 0,
 					"hidden" : 0,
 					"source" : [ "obj-19", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-82", 0 ],
-					"disabled" : 0,
-					"hidden" : 0,
-					"source" : [ "obj-19", 2 ]
 				}
 
 			}
@@ -22286,6 +22314,15 @@
 					"disabled" : 0,
 					"hidden" : 0,
 					"source" : [ "obj-93", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-102", 0 ],
+					"disabled" : 0,
+					"hidden" : 0,
+					"source" : [ "obj-95", 0 ]
 				}
 
 			}
