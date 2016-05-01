@@ -156,7 +156,7 @@ typedef struct _jit_boids3d
     BoidPtr         flockLL[MAX_FLOCKS]; //array holding 6 linked lists of the flocks
     AttractorPtr    attractorLL; //linked list for attractors
     
-    int tempForStats[1];
+    int tempForStats[1]; //this doesn't really serve a purpose
     
     double 			d2r;
     double			r2d;
