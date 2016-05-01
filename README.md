@@ -7,13 +7,21 @@
 
 Instructions for running the simulation can be found in the `ControlPanel...maxpat` file
 
-####Future Work:
-- 3rd outlet of externals only outputs when there is a change in flock size -> is this possible?
-    *Posted a question on forum about this because can't find in documentation/existing forum questions'
-- Attraction level based on attractors, not the boids *DONE
-    * do we want it to be one way or the other way? currently it is both
-- Find interesting boid behavior
-- Continue documentation of parameters / code
-- Visually connect boids in same neighborhood (output a matrix from external with each boid and its neighbors) This will make neighborhoods / clusters more visually obvious -> output matrix with endpoints of line and flock ID *OUTPUT MATRIX PART DONE
+####Final Writeups:
+1. Overview of System - JACK
+   - Overall architecture
+   - Data structures
+   - Design choices + things that didn't work and why
+   
+   
+2. Documentation - JACK AND GRACE
+   - LOTS
+	 - Exs: functions that assume a certain range of parameters, cases
+       that a function doesn't handle
 
+
+3. User's Manual - GRACE
+   - What are features; what can user control/change
+   - Enough to allow someone who doesn't doesn't know the code to
+     compile and run it
 
