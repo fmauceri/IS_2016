@@ -7,6 +7,9 @@
  free for non-commercial use
  modified 070207 by sier to set boids pos, etc
  
+ !!! Option-Click on functions and variables to see more information
+ 
+ FIXME attractorRadius is a better name for attractorWeight
  */
 
 #include "jit.common.h"
@@ -204,7 +207,7 @@ t_jit_err jit_boids3d_stats(t_jit_boids3d *flockPtr, void *attr, long argc, t_at
 
 //Initialization methods
 void InitFlock(t_jit_boids3d *flockPtr);
-BoidPtr InitLL(t_jit_boids3d *flockPtr, long numBoids, int flockID); //void Flock_donumBoids(t_jit_boids3d *flockPtr, long numBoids);
+BoidPtr InitLL(t_jit_boids3d *flockPtr, long numBoids, int flockID);
 BoidPtr InitBoid(t_jit_boids3d *flockPtr);
 AttractorPtr InitAttractor(t_jit_boids3d *flockPtr);
 NeighborLinePtr InitNeighborhoodLine(t_jit_boids3d *flockPtr, BoidPtr theBoid, BoidPtr theOtherBoid, int id);
@@ -216,14 +219,16 @@ void SeekPoint(t_jit_boids3d *flockPtr, BoidPtr theBoid, double *seekPt, double*
 void SeekAttractors(t_jit_boids3d *flockPtr, BoidPtr theBoid, double* seekDir);
 void AvoidWalls(t_jit_boids3d *flockPtr, BoidPtr theBoid, double *wallVel);
 char InFront(BoidPtr theBoid, BoidPtr neighbor);
+int CalcNumBoids(t_jit_boids3d *flockPtr);
+
+//Helper methods
 void NormalizeVelocity(double *direction);
 double RandomInt(double minRange, double maxRange);
 double DistSqrToPt(double *firstPoint, double *secondPoint);
-int CalcNumBoids(t_jit_boids3d *flockPtr);
 
 
 /*
- Initializes the jitter object
+    Initializes the jitter object
  */
 t_jit_err jit_boids3d_init(void)
 {
@@ -381,11 +386,15 @@ t_jit_err jit_boids3d_init(void)
 //
 //
 
-/*
- Updates the position of an attractor
- Inputs:
- argv+0/1/2 = xyz position to update to
- argv+3 = ID of the attractor
+/*!
+    @brief Updates the position of an attractor
+    @param flockPtr a pointer to the flock object
+    @param argv Arguments coming from the max patch:
+            [0] = new x position
+            [1] = new y position
+            [2] = new z position
+            [3] = new radius of attractor
+            [4] = id of the attractor to be updated
  */
 t_jit_err jit_boids3d_attractpt(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
@@ -410,9 +419,9 @@ t_jit_err jit_boids3d_attractpt(t_jit_boids3d *flockPtr, void *attr, long argc, 
 
 
 
-/*
- Adds an attractor at the origin with a given ID
- Inputs: none
+/*!
+    @brief Adds an attractor at the origin
+    @param argv the ID of the new attractor
  */
 t_jit_err jit_boids3d_addattractor(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
@@ -460,10 +469,9 @@ t_jit_err jit_boids3d_addattractor(t_jit_boids3d *flockPtr, void *attr, long arg
 }
 
 
-/*
- Deletes a specific attractor
- Inputs:
- argv+0: ID of the attractor to be deleted
+/*!
+    @brief Deletes an attractor with given ID
+    @param argv the ID of the attractor to be deleted
  */
 t_jit_err jit_boids3d_deleteattractor(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
@@ -605,10 +613,10 @@ t_jit_err jit_boids3d_age(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom
     return JIT_ERR_NONE;
 }
 
-/*
- Updates the position of the birth location
- Inputs:
- argv+0/1/2 = x/y/z of the new birth location
+
+/*!
+    @brief Updates the position of the birth location
+    @param argv argv[0]/[1]/[2] = The xyz of the new position
  */
 t_jit_err jit_boids3d_birthloc(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv){
     
@@ -620,8 +628,10 @@ t_jit_err jit_boids3d_birthloc(t_jit_boids3d *flockPtr, void *attr, long argc, t
 }
 
 
-/*
- This function is called when the number of boids in the maxpatch is changed. Adds or deletes the specified number of boids from the flock LL
+/*!
+    @brief Adds or deletes a specified number of boids from a flock
+    @param argv 0-5 = change for each flock. 6 = total change in number of boids
+    @warning Changes in number of boids and total change may be negative if boids are being deleted
  */
 t_jit_err jit_boids3d_number(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
 {
@@ -686,8 +696,14 @@ t_jit_err jit_boids3d_number(t_jit_boids3d *flockPtr, void *attr, long argc, t_a
     return 0;
 }
 
-/*
- Posts various stats to the console for debugging purposes
+
+/*!
+    @brief Posts various statistics to the max console for debugging purposes
+    @discussion Stats include:
+                    Flock Sizes,
+                    Attractor Location,
+                    Birth Location,
+                    Number of Neighbor Lines,
  */
 t_jit_err jit_boids3d_stats(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv){
     
@@ -996,8 +1012,9 @@ void jit_boids3d_calculate_ndim(t_jit_boids3d *flockPtr, long dimcount, long *di
 //
 
 
-/*
- Calculates each boid's new velocity and updates position
+/*!
+    @brief This method performs the velocity and position updates for all the boids
+    @param flockPtr A pointer to the flocks object
  */
 void FlightStep(t_jit_boids3d *flockPtr)
 {
@@ -1112,15 +1129,20 @@ void FlightStep(t_jit_boids3d *flockPtr)
     }
 }
 
-/*
- Calculates the center of a flock, saves it in flockPtr->centerPt. Also computes avoid and matching of neighbor velocities
- >This is a method that is a combo of what was previously FindFlockCenter() and MatchAndAvoidNeighbors(), because both involve calculating the neighbors of a boid
- 
- TODO: possible optimization = if we're only allowing boids from same flock, only calculate the center once for each flock
- TODO: avoidSpeed is never used
+
+/*!
+    @brief Calculates the center of a flock and saves it in flockPtr->centerPt
+                Computes the avoid and matching of neighbor velocities
+    @param flockPtr A pointer to the flocks object
+    @param theBoid  The boid object that the calculations are performed for
+    @param matchNeighborVel A reference to the matching velocity array in FlightStep()
+    @param separationNeighborVel A reference to a separation velocity array in FlightStep()
  */
 void CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, double *matchNeighborVel, double *separationNeighborVel)
 {
+    //TODO: avoid speed is never used
+    
+    
     //Variables for centering
     int flockID = theBoid->flockID;
     double totalH = 0, totalV = 0, totalD = 0;
@@ -1223,8 +1245,12 @@ void CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, dou
 }
 
 
-/*
- Calculates a new seek direction to a point
+/*!
+    @brief Computes a normalized direction vector from a boid to a seek point
+    @param flockPtr A pointer to the flocks object
+    @param theBoid The boid object that the direction vector is calculated for
+    @param seekPt The point that the boid is seeking
+    @param seekDir The calculated direction is stored here
  */
 void SeekPoint(t_jit_boids3d *flockPtr, BoidPtr theBoid, double *seekPt, double* seekDir)
 {
@@ -1235,9 +1261,12 @@ void SeekPoint(t_jit_boids3d *flockPtr, BoidPtr theBoid, double *seekPt, double*
 }
 
 
-/*
- Calculates a new seek direction for all attractors
- >TODO: not sure if this works
+
+/*!
+    @brief Computes a normalized seek direction from a boid towards every attractor
+    @param flockPtr A pointer to the flocks object
+    @param theBoid The boid object that the direction vector is calculated for
+    @param seekDir The calculated direction is stored here
  */
 void SeekAttractors(t_jit_boids3d *flockPtr, BoidPtr theBoid, double* seekDir)
 {
@@ -1260,16 +1289,15 @@ void SeekAttractors(t_jit_boids3d *flockPtr, BoidPtr theBoid, double* seekDir)
 }
 
 
-/*
- Bounces a boid back from the edges of the flyrect if necessary
+/*!
+    @brief Bounces boids back from the walls of the simulation if necessary
+    @param flockPtr A point to the flocks object
+    @param theBoid The boid object that is being bounced back from the walls
+    @param wallVel The resulting direction after bouncing off the wall
  */
 void AvoidWalls(t_jit_boids3d *flockPtr, BoidPtr theBoid, double *wallVel)
 {
     double		testPoint[3];
-    
-    //	wallVel[x] = 0.0;
-    //	wallVel[y] = 0.0;
-    //	wallVel[z] = 0.0;
     
     /* calculate test point in front of the nose of the boid */
     /* distance depends on the boid's speed and the avoid edge constant */
@@ -1299,8 +1327,11 @@ void AvoidWalls(t_jit_boids3d *flockPtr, BoidPtr theBoid, double *wallVel)
 }
 
 
-/*
- Determines if a neighbor boid is in front of another boid
+/*!
+    @brief Determines if a neighbor boid is in front of a given boid
+    @param theBoid A boid
+    @param neighbor A different boid - calculates if this boid is in front of theBoid
+    @return 0 if neighbor is not in front, 1 if it is
  */
 char InFront(BoidPtr theBoid, BoidPtr neighbor)
 {
@@ -1423,7 +1454,10 @@ void NormalizeVelocity(double *direction)
     }
 }
 
-//Returns a random integer in a range
+
+/*!
+    @brief Returns a random integer in the specified range
+ */
 double RandomInt(double minRange, double maxRange)
 {
     double	t, result;
@@ -1434,6 +1468,10 @@ double RandomInt(double minRange, double maxRange)
     return(result);
 }
 
+
+/*!
+    @brief Returns the squared distance between 2 points
+ */
 double DistSqrToPt(double *firstPoint, double *secondPoint)
 {
     double	a, b,c;
@@ -1444,9 +1482,17 @@ double DistSqrToPt(double *firstPoint, double *secondPoint)
 }
 
 
-/*
- Initializes everthing related to the flocks
- >also initializes the boids linked list for each flock
+
+//
+//
+//      MARK: Initialization and Free methods
+//
+//
+
+
+/*!
+    @brief Initializes everything related to the flock object
+    @param flockPtr a point to the flock object
  */
 void InitFlock(t_jit_boids3d *flockPtr)
 {
@@ -1454,6 +1500,7 @@ void InitFlock(t_jit_boids3d *flockPtr)
     flockPtr->number            = kNumBoids*MAX_FLOCKS;	//added init for jitter object
     flockPtr->neighbors			= kNumNeighbors;
     
+    //boundary initialization
     flockPtr->flyrect[top]		= kFlyRectTop;
     flockPtr->flyrect[left]		= kFlyRectLeft;
     flockPtr->flyrect[bottom]	= kFlyRectBottom;
@@ -1461,8 +1508,11 @@ void InitFlock(t_jit_boids3d *flockPtr)
     flockPtr->flyrect[front]	= kFlyRectFront;
     flockPtr->flyrect[back]		= kFlyRectBack;
     
+    //attractor initialization
     flockPtr->attractorLL = NULL;
     flockPtr->numAttractors = 0;
+    
+    //other initialization
     flockPtr->allowNeighborsFromDiffFlock = 1;
     flockPtr->sizeOfNeighborhoodConnections = 0;
     
@@ -1480,14 +1530,15 @@ void InitFlock(t_jit_boids3d *flockPtr)
         
         //create the linked list
         BoidPtr newLL = InitLL(flockPtr, kNumBoids, i);
-        //TODO: error checking here breaks the external
+        
+        ///!!! error checking here breaks the external
         if(!newLL){
-            return NULL;
+            return;
         }
         
         flockPtr->flockLL[i] = newLL; //add LL to the array
         
-        //default values
+        //default values, will be changed when the parameters in the max patch are banged
         flockPtr->minspeed[i]			= kMinSpeed;
         flockPtr->maxspeed[i]			= kMaxSpeed;
         flockPtr->center[i]             = kCenterWeight;
@@ -1503,8 +1554,9 @@ void InitFlock(t_jit_boids3d *flockPtr)
     }
 }
 
-/*
- Calculates the total number of boids across all flocks
+
+/*!
+    @brief Calculates and returns the total number of boids across all flocks
  */
 int CalcNumBoids(t_jit_boids3d *flockPtr)
 {
@@ -1515,14 +1567,13 @@ int CalcNumBoids(t_jit_boids3d *flockPtr)
     return boidsCounter;
 }
 
-//
-//
-//      MARK: Initialization and Free methods
-//
-//
 
-/*
- Initializes a LL. Returns a pointer to its head
+/*! 
+    @brief Initializes a linked list of boids
+    @param flockPtr a pointer to the flock object
+    @param numBoids The number of boids that will be added to this flock
+    @param flockID Which flock the boids of this linked list belong to
+    @return A pointer to boid that is the head of the linked list
  */
 BoidPtr InitLL(t_jit_boids3d *flockPtr, long numBoids, int flockID)
 {
@@ -1531,7 +1582,7 @@ BoidPtr InitLL(t_jit_boids3d *flockPtr, long numBoids, int flockID)
         
         BoidPtr theBoid = InitBoid(flockPtr); //make a new boid
         if(!theBoid){
-            printf("ERROR: failed to malloc a boid\n");
+            post("ERROR: failed to malloc a boid");
             return NULL;
         }
         
@@ -1545,21 +1596,24 @@ BoidPtr InitLL(t_jit_boids3d *flockPtr, long numBoids, int flockID)
         }
         
         //update number of boids in the flock
-        
         flockPtr->boidCount[flockID]++;
-        
     }
     
     return head;
 }
 
-/*
- 
+/*!
+    @brief Creates a NeighborLine object to connect 2 boids
+    @param flockPtr a pointer to the flock object
+    @param theBoid A boid that is one endpoint of the line
+    @param theOtherBoid A boid that is the other endpoint of the line
+    @param id The flock ID of both boids (both boids WILL belong to same flock)
+    @return A pointer to the new NeighborLine object
  */
 NeighborLinePtr InitNeighborhoodLine(t_jit_boids3d *flockPtr, BoidPtr theBoid, BoidPtr theOtherBoid, int id)
 {
+    //allocate memory for the line
     struct NeighborLine * theLine = (struct NeighborLine *)malloc(sizeof(struct NeighborLine));
-    
     if(!theLine){
         return NULL;
     }
@@ -1579,11 +1633,14 @@ NeighborLinePtr InitNeighborhoodLine(t_jit_boids3d *flockPtr, BoidPtr theBoid, B
 }
 
 
-/*
- Allocates memory for a Boid struct and returns a pointer to it
+/*!
+    @brief Initializes a boid object
+    @param flockPtr a pointer to the flock object
+    @return a pointer to the created boid
  */
 BoidPtr InitBoid(t_jit_boids3d *flockPtr)
 {
+    //allocate memory for the boid
     struct Boid * theBoid = (struct Boid *)malloc(sizeof(struct Boid));
     
     if(!theBoid){
@@ -1635,18 +1692,20 @@ BoidPtr InitBoid(t_jit_boids3d *flockPtr)
 }
 
 
-/*
- Mallocs memory for an attractor and returns a pointer to it
+/*!
+    @brief Initializes an Attractor object
+    @param flockPtr a pointer to the flock object
+    @return a pointer to the created Attractor object
  */
 AttractorPtr InitAttractor(t_jit_boids3d *flockPtr)
 {
+    //initialize memory for the attractor
     struct Attractor * theAttractor = (struct Attractor *)malloc(sizeof(struct Attractor));
-    
     if(!theAttractor){
         return NULL;
     }
     
-    //TODO: make the attractor at a specific point (not always the origin)
+    ///!!! make the attractor at a specific point (not always the origin)
     theAttractor->loc[0] = 0.0;
     theAttractor->loc[1] = 0.0;
     theAttractor->loc[2] = 0.0;
@@ -1657,8 +1716,8 @@ AttractorPtr InitAttractor(t_jit_boids3d *flockPtr)
 }
 
 
-/*
- Do initialization on startup of the jitter object
+/*!
+    @brief Does initialization for the jit_boids3d object
  */
 t_jit_boids3d *jit_boids3d_new(void)
 {
@@ -1667,7 +1726,6 @@ t_jit_boids3d *jit_boids3d_new(void)
     if ((flockPtr=(t_jit_boids3d *)jit_object_alloc(_jit_boids3d_class))) {
         
         flockPtr->flyRectCount		= 6;
-        //flockPtr->attractPtCount	= 1;
         flockPtr->mode	 			= 0;
         
         //init boids params
@@ -1682,9 +1740,8 @@ t_jit_boids3d *jit_boids3d_new(void)
 }
 
 
-/*
- Free the linked lists containing all the boids
- >NOTE: this replaces the previous method: jit_boids3d_free
+/*!
+    @brief Frees memory for all of the flocks in the simulation
  */
 void freeFlocks(t_jit_boids3d *flockPtr)
 {
