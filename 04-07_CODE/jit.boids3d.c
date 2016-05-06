@@ -1,6 +1,6 @@
 /*
   
-  This projected is a Max external for Swarm-PI project called "jit.boids3d.c" and
+  This project is a Max external for Swarm-PI project called "jit.boids3d.c" and
   was adapted from Wesley Smith (2005), Eric Singer (2003), and Andre Sier (2007).
   The project was found and designated free for non-commercial use.
   
