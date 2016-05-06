@@ -1,78 +1,91 @@
 /*
- jit.boids3d.c -- Jack Truskowski and Grace Handler 2015-2016
- 
- adapted from:
- 12/15/2005 wesley smith
- boids3d 08/2005 a.sier / jasch adapted from boids by eric singer ÔøΩ 1995-2003 eric l. singer
- free for non-commercial use
- modified 070207 by sier to set boids pos, etc
- 
+  
+  This projected is a Max external for Swarm-PI project called "jit.boids3d.c" and
+  was adapted from Wesley Smith (2005), Eric Singer (2003), and Andre Sier (2007).
+  The project was found and designated free for non-commercial use.
+  
+  Jack Truskowski and Grace Handler developed this project beginning in May 2015
+  until May 2016 as an indepdent study at Bowdoin College under the advisory of
+  Stephen Majercik and Frank Mauceri.
+  
+  */
+
+/* 
+ * HeaderDoc was used for commenting this project.
  !!! Option-Click on functions and variables to see more information
- 
- FIXME attractorRadius is a better name for attractorWeight
  */
 
 #include "jit.common.h"
 #include <math.h>
 
-// constants
-#define			kMaxNeighbors	200
-#define         kMaxNeighborLines 400
-#define         kMaxNumBoids    1000
-#define         MAX_FLOCKS      6 //Maximum number of flocks allowed in the simulation
+/*
+ * Constants
+ */
+#define kMaxNeighbors 200
+#define kMaxNeighborLines 400
+#define kMaxNumBoids 1000
+#define MAX_FLOCKS 6 // Maximum number of flocks allowed in simulation
 
-// initial flight parameters
-// NOTE: these aren't really used because the patcher is banged on startup and adds default parameters
-const int           kBoidMaxAge     = 1000; // default max age
-const long			kNumBoids		= 0;	// number of boids for each flock
-const long			kNumNeighbors	= 2;	// must be <= kMaxNeighbors
-const double 		kMinSpeed		= 0.15;	// boids' minimum speed
-const double		kMaxSpeed		= 0.25;	// boids' maximum speed
-const double		kCenterWeight	= 0.25;	// flock centering
-const double		kAttractWeight	= 0.300;// attraction point seeking
-const double		kMatchWeight	= 0.100;// neighbors velocity matching
-const double		kSepWeight	= 0.10;	// neighbors separation weight
-const double        kSepDist = 1.0; //the distance boids prefer to be from their neighbors
-const double		kDefaultSpeed	= 0.100;// Default boid speed
-const double		kInertiaFactor	= 0.20;	// willingness to change speed & direction
-const double		kAccelFactor	= 0.100;// neighbor avoidance accelerate or decelerate rate
-const double        kNRadius        = 0.25; // neighborhood radius
-const double		kFlyRectTop		= 1.0;	// fly rect boundaries
-const double		kFlyRectLeft	= -1.0;
-const double		kFlyRectBottom	= -1.0;
-const double		kFlyRectRight	= 1.0;
-const double		kFlyRectFront	= 1.0;
-const double		kFlyRectBack	= -1.0;
-const double        kFlyRectScalingFactor = 10;
+/*
+  * Initial flight parameters
+  * NOTE: These aren't really used, because the patcher is banged on startup and adds default paramters
+  */
+const int kBoidMaxAge = 1000;
+const long kNumBoids = 0;
+const long kNumNeighbors = 2;
+const double kMinSpeed = 0.15;
+const double kMaxSpeed = 0.25;
+const double kCenterWeight = 0.25;
+const double kAttractWeight	= 0.300;
+const double kMatchWeight	= 0.100;
+const double kSepWeight	= 0.10;
+const double kSepDist = 1.0;
+const double kDefaultSpeed = 0.100;
+const double kInertiaFactor	= 0.20;
+const double kAccelFactor = 0.100;
+const double kNRadius = 0.25;
+const double kFlyRectTop = 1.0;
+const double kFlyRectLeft = -1.0;
+const double kFlyRectBottom	= -1.0;
+const double kFlyRectRight = 1.0;
+const double kFlyRectFront = 1.0;
+const double kFlyRectBack = -1.0;
+const double kFlyRectScalingFactor = 10;
+
+/*
+  * NOTE: #define is used instead of strcuts for the sake of Max's Jitter object
+  * because of the way attribute data types work.
+  */
 
 //use defines instead of structs in jitter object
 //because of the way attribute data types work
 
-//defines for Point3d and Velocity
-#define				x			0
-#define				y			1
-#define				z			2
-
-//defines for FlyRect
-#define				left		0
-#define				right		1
-#define				top			2
-#define				bottom		3
-#define				front		4
-#define				back		5
-
+/*
+  * For Point3D and Velocity
+  */
+#define x 0
+#define y 1
+#define z 2
 
 /*
- Struct for an Attractor
- */
+  * For FlyRect
+  */
+#define left 0
+#define right 1
+#define top 2
+#define bottom 3
+#define front 4
+#define back 5
+
+/*!
+  * @typedef Attractor
+  * @brief Struct for one attractor object, which will be contained in LinkedList of boids
+  */
 typedef struct Attractor {
-    
-    int id;
+    struct Attractor *nextAttractor; // Pointer to next attractor
     double loc[3];
-    struct Attractor *nextAttractor;
-    
-    double attractorWeight;
-    
+    double attractorRadius; // Attraction radius of attractor
+    int id;
 } Attractor, *AttractorPtr;
 
 /*
@@ -81,88 +94,82 @@ typedef struct Attractor {
  
  TODO: add some sort of ID
  */
+/*!
+  * @typedef Boid
+  * @brief Struct for one boid object, which will be contained in LinkedList of boids
+ *  FIXME Add some sort of ID
+  */
 typedef struct Boid {
-    
-    int         flockID;
-    int         age;
-    
-    double		oldPos[3];
-    double		newPos[3];
-    double		oldDir[3];
-    double		newDir[3];
-    double		speed;
-    long		neighbor[kMaxNeighbors];
-    double		neighborDistSqr[kMaxNeighbors];
-    
+    int flockID; //
+    int age;
+    double oldPos[3];
+    double newPos[3];
+    double oldDir[3];
+    double newDir[3];
+    double speed;
+    long neighbor[kMaxNeighbors];
+    double neighborDistSqr[kMaxNeighbors];
     struct Boid *nextBoid;
-    
 } Boid, *BoidPtr;
 
 
 /*
- Struct for a line between 2 neighbor boids
- Stored in an array to be output in the 4th outlet
+ * @typedef NeighborLine
+ * @brief Struct for a line between two neigh boids; stored in an array; output in 4th outlet
  */
 typedef struct NeighborLine {
     
-    float       boidA[3];
-    float       boidB[3];
-    int         flockID;
+    float boidA[3];
+    float boidB[3];
+    int flockID;
     
 } NeighborLine, *NeighborLinePtr;
 
-
-/*
- Struct for the actual jitter object
- */
+/*!
+ * @typedef _jit_boids3d
+ * @brief Struct for the actual jitter object holding LinkedList of boids, attractors, etc.
+ */
 typedef struct _jit_boids3d
 {
-    t_object		ob;
-    char			mode;
-    long			number;
-    long            numAttractors;
-    long			neighbors;
+    t_object ob;
+    char mode;
+    long number;
+    long numAttractors;
+    long neighbors;
+    double flyrect[6]; // dimensions of the simulation
+    long flyRectCount;
+    int allowNeighborsFromDiffFlock; // bool, if boids can find neighbors that are in another flock
+    double birthLoc[3]; // birth location of boids, default is {0,0,0}
     
-    double			flyrect[6]; //dimensions of the simulation
-    long			flyRectCount;
+    // Flock specific paramters
+    int boidCount[MAX_FLOCKS];
+    int flockID[MAX_FLOCKS];
+    double minspeed[MAX_FLOCKS];
+    double maxspeed[MAX_FLOCKS];
+    double center[MAX_FLOCKS];
+    double attract[MAX_FLOCKS];
+    double match[MAX_FLOCKS];
+    double sepwt[MAX_FLOCKS];
+    double sepdist[MAX_FLOCKS];
+    double speed[MAX_FLOCKS];
+    double inertia[MAX_FLOCKS];
+    double accel[MAX_FLOCKS];
+    double neighborRadius[MAX_FLOCKS];
+    double age[MAX_FLOCKS];
+    double tempCenterPt[3];
+    long centerPtCount;
     
-    int             allowNeighborsFromDiffFlock; //can boids find neighbors that aren't in their flock
+    NeighborLinePtr neighborhoodConnections[kMaxNeighborLines]; // Array to hold lines between neighbors
+    long sizeOfNeighborhoodConnections;
     
-    //Parameters for each flock
-    int             boidCount[MAX_FLOCKS];
-    int             flockID[MAX_FLOCKS]; //?
-    double 			minspeed[MAX_FLOCKS];
-    double			maxspeed[MAX_FLOCKS];
-    double			center[MAX_FLOCKS];
-    double			attract[MAX_FLOCKS];
-    double			match[MAX_FLOCKS];
-    double			sepwt[MAX_FLOCKS];
-    double			sepdist[MAX_FLOCKS];
-    double			speed[MAX_FLOCKS];
-    double			inertia[MAX_FLOCKS];
-    double			accel[MAX_FLOCKS];
-    double          neighborRadius[MAX_FLOCKS];
-    double          age[MAX_FLOCKS];
+    BoidPtr flockLL[MAX_FLOCKS]; // Array holding at most 6 LinkedLists of flocks
+    AttractorPtr attractorLL; // Array holding at most 6 LinkedLists of attractors
     
-    //XYZ for each flock
+    int tempForStats[1]; //?
     
-    double          tempCenterPt[3];
-    long			centerPtCount;
-    
-    //stipulates where boids are born in space when they are added (DEFAULT = {0, 0, 0,})
-    double          birthLoc[3];
-    
-    //array to hold the lines between neighbors
-    NeighborLinePtr neighborhoodConnections[kMaxNeighborLines];
-    long            sizeOfNeighborhoodConnections;
-    
-    BoidPtr         flockLL[MAX_FLOCKS]; //array holding 6 linked lists of the flocks
-    AttractorPtr    attractorLL; //linked list for attractors
-    
-    int tempForStats[1]; //this doesn't really serve a purpose
-    
-    double 			d2r;
-    double			r2d;
+    // Setting angle of velocity
+    double 			d2r; // Degrees --> Radians
+    double			r2d; // Radians --> Degrees
     
 } t_jit_boids3d;
 
@@ -407,7 +414,7 @@ t_jit_err jit_boids3d_attractpt(t_jit_boids3d *flockPtr, void *attr, long argc, 
                 iterator->loc[0] = (double)jit_atom_getfloat(argv);
                 iterator->loc[1] = (double)jit_atom_getfloat(argv+1);
                 iterator->loc[2] = (double)jit_atom_getfloat(argv+2);
-                iterator->attractorWeight = (double)jit_atom_getfloat(argv+3);
+                iterator->attractorRadius = (double)jit_atom_getfloat(argv+3);
             }
             return JIT_ERR_NONE;
         }
@@ -720,7 +727,7 @@ t_jit_err jit_boids3d_stats(t_jit_boids3d *flockPtr, void *attr, long argc, t_at
         post("Attractors:");
         AttractorPtr iterator = flockPtr->attractorLL;
         while(iterator){
-            post("   ID: %d,  Location: (%0.2f, %0.2f, %0.2f), Strength: %0.2f", iterator->id, iterator->loc[x], iterator->loc[y], iterator->loc[z], iterator->attractorWeight);
+            post("   ID: %d,  Location: (%0.2f, %0.2f, %0.2f), Strength: %0.2f", iterator->id, iterator->loc[x], iterator->loc[y], iterator->loc[z], iterator->attractorRadius);
             iterator = iterator->nextAttractor;
         }
     }else{
@@ -794,7 +801,7 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
         out3_minfo.dim[0] = flockPtr->numAttractors;
         out3_minfo.dim[1] = 1;
         out3_minfo.type = _jit_sym_float32; //outputting floating point numbers
-        out3_minfo.planecount = 5; //xyz, id, attractorWeight
+        out3_minfo.planecount = 5; //xyz, id, attractorRadius
         
         //dimensions of the neighborhood line connecting matrix
         out4_minfo.dim[0] = kMaxNeighborLines;
@@ -854,7 +861,7 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
             out3_data[1] = iterator->loc[1];
             out3_data[2] = iterator->loc[2];
             out3_data[3] = iterator->id;
-            out3_data[4] = iterator->attractorWeight;
+            out3_data[4] = iterator->attractorRadius;
             
             out3_data += 5; //planecount
             
@@ -1276,7 +1283,7 @@ void SeekAttractors(t_jit_boids3d *flockPtr, BoidPtr theBoid, double* seekDir)
     while(iterator){
         
         double dist = sqrt(DistSqrToPt(iterator->loc, theBoid->oldPos));
-        if(dist < iterator->attractorWeight){
+        if(dist < iterator->attractorRadius){
             seekDir[x] += iterator->loc[x]-theBoid->oldPos[x];
             seekDir[y] += iterator->loc[y]-theBoid->oldPos[y];
             seekDir[z] += iterator->loc[z]-theBoid->oldPos[z];
@@ -1710,7 +1717,7 @@ AttractorPtr InitAttractor(t_jit_boids3d *flockPtr)
     theAttractor->loc[1] = 0.0;
     theAttractor->loc[2] = 0.0;
     
-    theAttractor->attractorWeight = 0.0;
+    theAttractor->attractorRadius = 0.0;
     
     return theAttractor;
 }
