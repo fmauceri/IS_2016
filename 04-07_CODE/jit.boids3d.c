@@ -12,7 +12,7 @@
 
 /* 
  * HeaderDoc was used for commenting this project.
- !!! Option-Click on functions and variables to see more information
+ !!! Option-Click on names of functions and variables to see more information
  */
 
 #include "jit.common.h"
