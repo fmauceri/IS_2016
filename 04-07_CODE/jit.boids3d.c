@@ -5,7 +5,7 @@
   The project was found and designated free for non-commercial use.
   
   Jack Truskowski and Grace Handler developed this project beginning in May 2015
-  until May 2016 as an indepdent study at Bowdoin College under the advisory of
+  until December 2016 as an independent study at Bowdoin College under the advisory of
   Stephen Majercik and Frank Mauceri.
   
   */
