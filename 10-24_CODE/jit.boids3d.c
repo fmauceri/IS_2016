@@ -32,7 +32,7 @@
   */
 const int kBoidMaxAge = 1000;
 const long kNumBoids = 0;
-const long kNumNeighbors = 2;
+const long kNumNeighbors = 10;
 const double kMinSpeed = 0.15;
 const double kMaxSpeed = 0.25;
 const double kCenterWeight = 0.25;
@@ -804,7 +804,7 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
         out3_minfo.planecount = 5; //xyz, id, attractorRadius
         
         //dimensions of the neighborhood line connecting matrix
-        out4_minfo.dim[0] = kMaxNeighborLines;
+        out4_minfo.dim[0] = flockPtr->sizeOfNeighborhoodConnections;
         out4_minfo.dim[1] = 1;
         out4_minfo.type = _jit_sym_float32;
         out4_minfo.planecount = 7;
@@ -870,32 +870,19 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
         
         //populate the 4th outlet with data
         float *out4_data = (float*)out4_bp;
-        int tempCount = flockPtr->sizeOfNeighborhoodConnections;
         
-        for(int i=0; i<kMaxNeighborLines; i++){
+        for(int i=0; i<flockPtr->sizeOfNeighborhoodConnections; i++){
             
-            if(tempCount > 0){
-                out4_data[0] = flockPtr->neighborhoodConnections[i]->boidA[x];
-                out4_data[1] = flockPtr->neighborhoodConnections[i]->boidA[y];
-                out4_data[2] = flockPtr->neighborhoodConnections[i]->boidA[z];
-                
-                out4_data[3] = flockPtr->neighborhoodConnections[i]->boidB[x];
-                out4_data[4] = flockPtr->neighborhoodConnections[i]->boidB[y];
-                out4_data[5] = flockPtr->neighborhoodConnections[i]->boidB[z];
-                
-                out4_data[6] = flockPtr->neighborhoodConnections[i]->flockID;
-            }else{
-                out4_data[0] = -1.0;
-                out4_data[1] = -1.0;
-                out4_data[2] = -1.0;
-                
-                out4_data[3] = -1.0;
-                out4_data[4] = -1.0;
-                out4_data[5] = -1.0;
-                
-                out4_data[6] = -1.0;
-            }
-            tempCount--;
+            out4_data[0] = flockPtr->neighborhoodConnections[i]->boidA[x];
+            out4_data[1] = flockPtr->neighborhoodConnections[i]->boidA[y];
+            out4_data[2] = flockPtr->neighborhoodConnections[i]->boidA[z];
+            
+            out4_data[3] = flockPtr->neighborhoodConnections[i]->boidB[x];
+            out4_data[4] = flockPtr->neighborhoodConnections[i]->boidB[y];
+            out4_data[5] = flockPtr->neighborhoodConnections[i]->boidB[z];
+            
+            out4_data[6] = flockPtr->neighborhoodConnections[i]->flockID;
+            
             out4_data += 7; //planecount
         }
         
@@ -1163,11 +1150,11 @@ void CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, dou
     double	avoidSpeed = theBoid->speed;
     int neighborsCount = 0; //counter to keep track of how many neighbors we've found
     
+    int startAddingBoidLines = 0;
+    
     for(int i=0; i<MAX_FLOCKS; i++){ //grab every boid
         
         BoidPtr iterator = flockPtr->flockLL[i];
-        
-        int startAddingBoidLines = 0;
         
         while(iterator){
             
