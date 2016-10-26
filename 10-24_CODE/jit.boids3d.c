@@ -1150,7 +1150,7 @@ void CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, dou
     double	avoidSpeed = theBoid->speed;
     int neighborsCount = 0; //counter to keep track of how many neighbors we've found
     
-    int startAddingBoidLines = 0;
+    //int startAddingBoidLines = 0;
     
     for(int i=0; i<MAX_FLOCKS; i++){ //grab every boid
         
@@ -1197,7 +1197,7 @@ void CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, dou
                 }
                 
                 //Check if a line needs to be drawn between these boids
-                if(startAddingBoidLines == 1 && flockPtr->sizeOfNeighborhoodConnections < kMaxNeighborLines) {
+                if(flockPtr->sizeOfNeighborhoodConnections < kMaxNeighborLines) {
                     NeighborLinePtr newLine = InitNeighborhoodLine(flockPtr, theBoid, iterator, theBoid->flockID);
                     if(!newLine){
                         post("ERROR: Failed to allocate a line");
@@ -1212,11 +1212,12 @@ void CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, dou
                 
                 neighborsCount++;
                 
-            }else if(dist == 0.0 && iterator->flockID == theBoid->flockID){
+            }
+            /*else if(dist == 0.0 && iterator->flockID == theBoid->flockID){
                 //When the boid sees itself, it should draw lines to all the boids remaining in the LL if they are close enough
                 startAddingBoidLines = 1;
             }
-            
+             */
             
             iterator = iterator->nextBoid; //move to next boid
         }
