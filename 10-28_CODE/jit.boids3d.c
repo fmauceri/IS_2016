@@ -121,10 +121,12 @@ typedef struct Boid {
 typedef struct NeighborLine {
     
     float boidA[3];
-    int aID;
+    int aID; //boid A global id
+    
     float boidB[3];
-    int bID;
-    int flockID;
+    int bID; //boid B global id
+    
+    int flockID[2]; //[boidAflockID, boidBflockID]
     
 } NeighborLine, *NeighborLinePtr;
 
@@ -223,7 +225,7 @@ void InitFlock(t_jit_boids3d *flockPtr);
 BoidPtr InitLL(t_jit_boids3d *flockPtr, long numBoids, int flockID);
 BoidPtr InitBoid(t_jit_boids3d *flockPtr);
 AttractorPtr InitAttractor(t_jit_boids3d *flockPtr);
-NeighborLinePtr InitNeighborhoodLine(t_jit_boids3d *flockPtr, BoidPtr theBoid, BoidPtr theOtherBoid, int id);
+NeighborLinePtr InitNeighborhoodLine(t_jit_boids3d *flockPtr, BoidPtr theBoid, BoidPtr theOtherBoid);
 
 //Methods for running the simulation
 void FlightStep(t_jit_boids3d *flockPtr);
@@ -833,7 +835,7 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
         out4_minfo.dim[0] = flockPtr->sizeOfNeighborhoodConnections;
         out4_minfo.dim[1] = 1;
         out4_minfo.type = _jit_sym_float32;
-        out4_minfo.planecount = 7;
+        out4_minfo.planecount = 9;
         
         //output the correct mode
         switch(flockPtr->mode) { // newpos
@@ -907,9 +909,12 @@ t_jit_err jit_boids3d_matrix_calc(t_jit_boids3d *flockPtr, void *inputs, void *o
             out4_data[4] = flockPtr->neighborhoodConnections[i]->boidB[y];
             out4_data[5] = flockPtr->neighborhoodConnections[i]->boidB[z];
             
-            out4_data[6] = flockPtr->neighborhoodConnections[i]->flockID;
+            out4_data[6] = flockPtr->neighborhoodConnections[i]->flockID[0];
+            out4_data[7] = flockPtr->neighborhoodConnections[i]->flockID[1];
             
-            out4_data += 7; //planecount
+            out4_data[8] = flockPtr->sizeOfNeighborhoodConnections; //TODO: this is a little hacky, should not need to dedicate a whole plane to this
+            
+            out4_data += 9; //planecount
         }
         
         
@@ -1243,7 +1248,7 @@ void CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, dou
                     
                     //If this is a new line, create it and add it to the neighborhoodConnections array
                     if(!lineAlreadyExists){
-                        NeighborLinePtr newLine = InitNeighborhoodLine(flockPtr, theBoid, iterator, theBoid->flockID);
+                        NeighborLinePtr newLine = InitNeighborhoodLine(flockPtr, theBoid, iterator);
                         if(!newLine){
                             post("ERROR: Failed to allocate a line");
                             continue;
@@ -1653,7 +1658,7 @@ BoidPtr InitLL(t_jit_boids3d *flockPtr, long numBoids, int flockID)
     @param id The flock ID of both boids (both boids WILL belong to same flock)
     @return A pointer to the new NeighborLine object
  */
-NeighborLinePtr InitNeighborhoodLine(t_jit_boids3d *flockPtr, BoidPtr theBoid, BoidPtr theOtherBoid, int id)
+NeighborLinePtr InitNeighborhoodLine(t_jit_boids3d *flockPtr, BoidPtr theBoid, BoidPtr theOtherBoid)
 {
     //allocate memory for the line
     struct NeighborLine * theLine = (struct NeighborLine *)malloc(sizeof(struct NeighborLine));
@@ -1672,7 +1677,8 @@ NeighborLinePtr InitNeighborhoodLine(t_jit_boids3d *flockPtr, BoidPtr theBoid, B
     theLine->boidB[z] = theOtherBoid->newPos[z];
     theLine->bID = theOtherBoid->globalID;
     
-    theLine->flockID = id;
+    theLine->flockID[0] = theBoid->flockID;
+    theLine->flockID[1] = theOtherBoid->flockID;
     
     return theLine;
 }
