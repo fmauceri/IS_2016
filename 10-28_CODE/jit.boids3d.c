@@ -102,6 +102,7 @@ typedef struct Attractor {
 typedef struct Boid {
     int flockID; //
     int age;
+    int globalID; //a unique identifier across all flocks
     double oldPos[3];
     double newPos[3];
     double oldDir[3];
@@ -120,7 +121,9 @@ typedef struct Boid {
 typedef struct NeighborLine {
     
     float boidA[3];
+    int aID;
     float boidB[3];
+    int bID;
     int flockID;
     
 } NeighborLine, *NeighborLinePtr;
@@ -140,6 +143,7 @@ typedef struct _jit_boids3d
     long flyRectCount;
     int allowNeighborsFromDiffFlock; // bool, if boids can find neighbors that are in another flock
     double birthLoc[3]; // birth location of boids, default is {0,0,0}
+    int newBoidID;
     
     // Flock specific paramters
     int boidCount[MAX_FLOCKS];
@@ -740,6 +744,8 @@ t_jit_err jit_boids3d_stats(t_jit_boids3d *flockPtr, void *attr, long argc, t_at
     //neighbor connections
     post("Number of Neighbor Lines: %d/%d", flockPtr->sizeOfNeighborhoodConnections, kMaxNeighborLines);
     
+    post("Largest boid ID: %d", flockPtr->newBoidID);
+    
     post("- - - - - - -");
     
     return 0;
@@ -1032,6 +1038,8 @@ void FlightStep(t_jit_boids3d *flockPtr)
             iterator->age++;
             if(iterator->age > flockPtr->age[iterator->flockID] && flockPtr->age[iterator->flockID] != -1){
                 
+                //TODO: put the boid's ID in a LL so it can be reused (and IDS don't get arbitrarily large)
+                
                 BoidPtr deletor = iterator;
                 
                 //delete the boid and continue
@@ -1147,7 +1155,7 @@ void CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, dou
     matchNeighborVel[z] = 0;
     
     //Variables for avoidance
-    double	avoidSpeed = theBoid->speed;
+    double avoidSpeed = theBoid->speed;
     int neighborsCount = 0; //counter to keep track of how many neighbors we've found
     
     //int startAddingBoidLines = 0;
@@ -1198,15 +1206,33 @@ void CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, dou
                 
                 //Check if a line needs to be drawn between these boids
                 if(flockPtr->sizeOfNeighborhoodConnections < kMaxNeighborLines) {
-                    NeighborLinePtr newLine = InitNeighborhoodLine(flockPtr, theBoid, iterator, theBoid->flockID);
-                    if(!newLine){
-                        post("ERROR: Failed to allocate a line");
-                        continue;
+                    
+                    int lineAlreadyExists = 0;
+                    
+                    //Check to see if this line has already been added from another boid
+                    //TODO: improve efficiency so its not ~O(n^2)?
+                    for(int i=0; i<flockPtr->sizeOfNeighborhoodConnections; i++){
+                        
+                        //does this line exist?
+                        if((flockPtr->neighborhoodConnections[i]->bID == theBoid->globalID && flockPtr->neighborhoodConnections[i]->aID == iterator->globalID) || (flockPtr->neighborhoodConnections[i]->aID == theBoid->globalID && flockPtr->neighborhoodConnections[i]->bID == iterator->globalID)){
+                            lineAlreadyExists = 1;
+                            break;
+                        }
+
                     }
                     
-                    //add the new line to the array
-                    flockPtr->neighborhoodConnections[flockPtr->sizeOfNeighborhoodConnections] = newLine;
-                    flockPtr->sizeOfNeighborhoodConnections++;
+                    //If this is a new line, create it and add it to the neighborhoodConnections array
+                    if(!lineAlreadyExists){
+                        NeighborLinePtr newLine = InitNeighborhoodLine(flockPtr, theBoid, iterator, theBoid->flockID);
+                        if(!newLine){
+                            post("ERROR: Failed to allocate a line");
+                            continue;
+                        }
+                        
+                        //add the new line to the array
+                        flockPtr->neighborhoodConnections[flockPtr->sizeOfNeighborhoodConnections] = newLine;
+                        flockPtr->sizeOfNeighborhoodConnections++;
+                    }
                     
                 }
                 
@@ -1510,6 +1536,7 @@ void InitFlock(t_jit_boids3d *flockPtr)
     //other initialization
     flockPtr->allowNeighborsFromDiffFlock = 1;
     flockPtr->sizeOfNeighborhoodConnections = 0;
+    flockPtr->newBoidID = 0;
     
     //set the initial birth location to the origin
     flockPtr->birthLoc[x] = 0.0;
@@ -1617,10 +1644,12 @@ NeighborLinePtr InitNeighborhoodLine(t_jit_boids3d *flockPtr, BoidPtr theBoid, B
     theLine->boidA[x] = theBoid->newPos[x];
     theLine->boidA[y] = theBoid->newPos[y];
     theLine->boidA[z] = theBoid->newPos[z];
+    theLine->aID = theBoid->globalID;
     
     theLine->boidB[x] = theOtherBoid->newPos[x];
     theLine->boidB[y] = theOtherBoid->newPos[y];
     theLine->boidB[z] = theOtherBoid->newPos[z];
+    theLine->bID = theOtherBoid->globalID;
     
     theLine->flockID = id;
     
@@ -1643,6 +1672,10 @@ BoidPtr InitBoid(t_jit_boids3d *flockPtr)
     }
     
     theBoid->age = 0; //set age to 0
+    
+    //assign the boid a unique ID
+    theBoid->globalID = flockPtr->newBoidID;
+    flockPtr->newBoidID++;
     
     //initialize struct variables
     theBoid->oldPos[x] = 0.0;
