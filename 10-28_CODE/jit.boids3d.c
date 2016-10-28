@@ -165,6 +165,7 @@ typedef struct _jit_boids3d
     
     NeighborLinePtr neighborhoodConnections[kMaxNeighborLines]; // Array to hold lines between neighbors
     long sizeOfNeighborhoodConnections;
+    int drawingNeighbors; //boolean to avoid computing neighbor lines if we are not drawing neighbors
     
     BoidPtr flockLL[MAX_FLOCKS]; // Array holding at most 6 LinkedLists of flocks
     AttractorPtr attractorLL; // Array holding at most 6 LinkedLists of attractors
@@ -214,6 +215,7 @@ t_jit_err jit_boids3d_addattractor(t_jit_boids3d *flockPtr, void *attr, long arg
 t_jit_err jit_boids3d_deleteattractor(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
 t_jit_err jit_boids3d_birthloc(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv);
 t_jit_err jit_boids3d_stats(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv); //posts various stats to the max console
+t_jit_err jit_boids3d_drawingneighbors(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv); //0/1 if the max patch wants to draw neighbors
 
 
 //Initialization methods
@@ -368,7 +370,7 @@ t_jit_err jit_boids3d_init(void)
                           (method)0L,(method)jit_boids3d_addattractor,calcoffset(t_jit_boids3d,numAttractors));
     jit_class_addattr(_jit_boids3d_class,attr);
     
-    //add attractor
+    //delete attractor
     attr = jit_object_new(_jit_sym_jit_attr_offset_array,"deleteattractor",_jit_sym_long,2,attrflags,
                           (method)0L,(method)jit_boids3d_deleteattractor,calcoffset(t_jit_boids3d,numAttractors));
     jit_class_addattr(_jit_boids3d_class,attr);
@@ -381,6 +383,11 @@ t_jit_err jit_boids3d_init(void)
     //stats
     attr = jit_object_new(_jit_sym_jit_attr_offset_array,"stats",_jit_sym_float64, 0, attrflags,
                           (method)0L,(method)jit_boids3d_stats,calcoffset(t_jit_boids3d,tempForStats));
+    jit_class_addattr(_jit_boids3d_class,attr);
+    
+    //doing neighbor lines
+    attr = jit_object_new(_jit_sym_jit_attr_offset_array,"drawingneighbors",_jit_sym_long,1,attrflags,
+                          (method)0L,(method)jit_boids3d_drawingneighbors,calcoffset(t_jit_boids3d,drawingNeighbors));
     jit_class_addattr(_jit_boids3d_class,attr);
     
     
@@ -476,6 +483,19 @@ t_jit_err jit_boids3d_addattractor(t_jit_boids3d *flockPtr, void *attr, long arg
     }
     newAttractor->nextAttractor = iterator;
     flockPtr->attractorLL = newAttractor;
+    return JIT_ERR_NONE;
+}
+
+
+/*!
+ @brief Updates the drawingNeighbors boolean
+ @param argv boolean int of whether neighbor lines should be drawn or not
+ */
+t_jit_err jit_boids3d_drawingneighbors(t_jit_boids3d *flockPtr, void *attr, long argc, t_atom *argv)
+{
+    int draw = (int)jit_atom_getlong(argv);
+    flockPtr->drawingNeighbors = draw;
+    
     return JIT_ERR_NONE;
 }
 
@@ -1205,8 +1225,8 @@ void CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, dou
                 }
                 
                 //Check if a line needs to be drawn between these boids
-                if(flockPtr->sizeOfNeighborhoodConnections < kMaxNeighborLines) {
-                    
+                if(flockPtr->sizeOfNeighborhoodConnections < kMaxNeighborLines && flockPtr->drawingNeighbors) {
+                   
                     int lineAlreadyExists = 0;
                     
                     //Check to see if this line has already been added from another boid
@@ -1536,6 +1556,7 @@ void InitFlock(t_jit_boids3d *flockPtr)
     //other initialization
     flockPtr->allowNeighborsFromDiffFlock = 1;
     flockPtr->sizeOfNeighborhoodConnections = 0;
+    flockPtr->drawingNeighbors = 0;
     flockPtr->newBoidID = 0;
     
     //set the initial birth location to the origin
