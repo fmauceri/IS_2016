@@ -22,7 +22,7 @@
  * Constants
  */
 #define kMaxNeighbors 200
-#define kMaxNeighborLines 400
+#define kMaxNeighborLines 272 //tested from max patch, it doesn't like rendering more lines than this
 #define kMaxNumBoids 1000
 #define MAX_FLOCKS 6 // Maximum number of flocks allowed in simulation
 
@@ -143,7 +143,7 @@ typedef struct _jit_boids3d
     long neighbors;
     double flyrect[6]; // dimensions of the simulation
     long flyRectCount;
-    int allowNeighborsFromDiffFlock; // bool, if boids can find neighbors that are in another flock
+    char allowNeighborsFromDiffFlock; // bool, if boids can find neighbors that are in another flock
     double birthLoc[3]; // birth location of boids, default is {0,0,0}
     int newBoidID;
     
@@ -1197,6 +1197,7 @@ void CalcFlockCenterAndNeighborVel(t_jit_boids3d *flockPtr, BoidPtr theBoid, dou
                 
                 //check to ensure this boid is allowed / in same flock
                 if (flockPtr->allowNeighborsFromDiffFlock == 0 && iterator->flockID != flockID){
+                    iterator = iterator->nextBoid;
                     continue;
                 }
                 
@@ -1559,7 +1560,6 @@ void InitFlock(t_jit_boids3d *flockPtr)
     flockPtr->numAttractors = 0;
     
     //other initialization
-    flockPtr->allowNeighborsFromDiffFlock = 1;
     flockPtr->sizeOfNeighborhoodConnections = 0;
     flockPtr->drawingNeighbors = 0;
     flockPtr->newBoidID = 0;
@@ -1782,6 +1782,7 @@ t_jit_boids3d *jit_boids3d_new(void)
         
         flockPtr->flyRectCount		= 6;
         flockPtr->mode	 			= 0;
+        flockPtr->allowNeighborsFromDiffFlock = 0;
         
         //init boids params
         InitFlock(flockPtr);
