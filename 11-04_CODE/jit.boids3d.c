@@ -86,6 +86,7 @@ typedef struct Attractor {
     double loc[3];
     double attractorRadius; // Attraction radius of attractor
     int id;
+    int onlyAttractedFlockID; //-1 if all flocks feel the attractor, otherwise the ID of the only flock that will feel this attractor
 } Attractor, *AttractorPtr;
 
 /*
@@ -451,6 +452,10 @@ t_jit_err jit_boids3d_addattractor(t_jit_boids3d *flockPtr, void *attr, long arg
     //initialize an attractor
     AttractorPtr iterator = flockPtr->attractorLL;
     AttractorPtr newAttractor = InitAttractor(flockPtr);
+    if(newID == 0){
+        newAttractor->onlyAttractedFlockID = 0;
+    }
+    
     flockPtr->numAttractors++;
     
     //no attractors exist
@@ -1323,7 +1328,9 @@ void SeekAttractors(t_jit_boids3d *flockPtr, BoidPtr theBoid, double* seekDir)
     while(iterator){
         
         double dist = sqrt(DistSqrToPt(iterator->loc, theBoid->oldPos));
-        if(dist < iterator->attractorRadius){
+        
+        //ensure that the boid is in range of the attractor and it is allowed to feel attraction to this attractor
+        if(dist < iterator->attractorRadius && (iterator->onlyAttractedFlockID == -1 || iterator->onlyAttractedFlockID == theBoid->flockID)){
             seekDir[x] += iterator->loc[x]-theBoid->oldPos[x];
             seekDir[y] += iterator->loc[y]-theBoid->oldPos[y];
             seekDir[z] += iterator->loc[z]-theBoid->oldPos[z];
@@ -1760,11 +1767,12 @@ AttractorPtr InitAttractor(t_jit_boids3d *flockPtr)
         return NULL;
     }
     
-    ///!!! make the attractor at a specific point (not always the origin)
+    //TODO: make the attractor at a specific point (not always the origin)
     theAttractor->loc[0] = 0.0;
     theAttractor->loc[1] = 0.0;
     theAttractor->loc[2] = 0.0;
     
+    theAttractor->onlyAttractedFlockID = -1;
     theAttractor->attractorRadius = 0.0;
     
     return theAttractor;
